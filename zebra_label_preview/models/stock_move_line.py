@@ -30,9 +30,14 @@ class StockMoveLine(models.Model):
         """ Procesa el QWeb en texto ZPL y solicita el render PNG a Labelary """
         self.ensure_one()
         
-        # 1. CORREGIDO PARA ODOO 19: Pasar explícitamente el parámetro docids
-        report_action = self.env.ref('zebra_label_preview.action_report_zebra_jkkpack')
-        zpl_content_bytes, report_type = report_action._render_qweb_text(docids=self.ids)
+        # XML ID de nuestro reporte personalizado
+        report_ref = 'zebra_label_preview.action_report_zebra_jkkpack'
+        
+        # 1. ADAPTADO PARA ODOO 19.0: Invocación usando report_ref y docids de forma explícita
+        zpl_content_bytes, report_type = self.env['ir.actions.report']._render_qweb_text(
+            report_ref=report_ref, 
+            docids=self.ids
+        )
         
         # Asegurar decodificación limpia de los comandos de texto nativos
         zpl_text = zpl_content_bytes.decode('utf-8') if isinstance(zpl_content_bytes, bytes) else zpl_content_bytes
