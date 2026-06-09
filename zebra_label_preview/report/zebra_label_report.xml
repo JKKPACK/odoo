@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Declaración del Reporte tipo QWeb-Text -->
+    <record id="action_report_zebra_jkkpack" model="ir.actions.report">
+        <field name="name">Etiqueta de Recepción Zebra (JKKPack)</field>
+        <field name="model">stock.move.line</field>
+        <field name="report_type">qweb-text</field>
+        <field name="report_name">zebra_label_preview.report_zebra_jkkpack_template</field>
+        <field name="report_file">zebra_label_preview.report_zebra_jkkpack_template</field>
+        <field name="binding_model_id" ref="stock.model_stock_move_line"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Estructura del código ZPL dinámico compilado a 203 DPI -->
+    <template id="report_zebra_jkkpack_template">
+        <t t-foreach="docs" t-as="line">
+            <t t-translation="off">
+^XA
+^CI28
+^PW812
+^LL1218
+
+^FO40,30^FB732,1,0,C,0^A0N,44,44^FD<t t-esc="line.company_id.name"/>^FS
+
+^FO40,100^A0N,22,22^FDArticulo^FS
+^FO400,100^A0N,22,22^FDEntrada de mercancia^FS
+
+^FO40,130^A0N,36,36^FD<t t-esc="line.product_id.default_code or 'SIN_CODIGO'"/>^FS
+^FO400,130^A0N,32,32^FD<t t-esc="line.picking_id.name or 'WH/IN/XXXXX'"/>^FS
+
+^FO40,180^BCN,65,N,N,N^FD<t t-esc="line.product_id.default_code or '000000'"/>^FS
+
+^FO40,270^FB600,2,0,L,0^A0N,32,32^FD<t t-esc="line.product_id.name"/>^FS
+
+^FO680,240^BVR,110,N,N,N^FD<t t-esc="line.lot_id.name or 'SIN_LOTE'"/>^FS
+^FO760,240^A0R,22,22^FD<t t-esc="line.lot_id.name or 'SIN_LOTE'"/>^FS
+
+^FO40,370^A0N,28,28^FDOrden de Compra: <t t-esc="line.picking_id.purchase_id.name or 'S/N'"/>^FS
+
+^FO40,420^A0N,24,24^FDTIPO MATERIAL: <t t-esc="line.product_id.categ_id.name"/>^FS
+^FO40,465^A0N,24,24^FDCALIBRE: <t t-esc="'%.2f' % line.x_calibre"/>^FS
+^FO400,465^A0N,24,24^FDANCHO: <t t-esc="'%.2f' % line.x_ancho"/>^FS
+
+^FO40,520^A0N,28,28^FDCantidad: <t t-esc="'%.2f' % line.quantity"/> <t t-esc="line.product_uom_id.name or 'Kilos'"/>^FS
+^FO430,510^BCN,50,N,N,N^FD<t t-esc="'%.2f' % line.quantity"/>^FS
+^FO530,565^A0N,20,20^FD<t t-esc="'%.2f' % line.quantity"/>^FS
+
+^FO40,580^A0N,24,24^FDFactura: <t t-esc="line.x_factura_proveedor or ''"/>^FS
+^FO40,620^A0N,24,24^FDRollo Proveedor: <t t-esc="line.x_rollo_proveedor or ''"/>^FS
+^FO40,660^A0N,24,24^FDLote Proveedor: <t t-esc="line.x_lote_proveedor or ''"/>^FS
+
+^FO40,710^A0N,24,24^FDRecibe: <t t-esc="line.write_uid.name"/>^FS
+^FO40,750^A0N,24,24^FDFecha: <t t-esc="line.write_date.strftime('%d/%m/%Y %I:%M %p') if line.write_date else ''"/>^FS
+
+^FO555,620^BQN,2,6^FDQA,<t t-esc="line.x_qr_content"/>^FS
+
+^XZ
+            </t>
+        </t>
+    </template>
+</odoo>
