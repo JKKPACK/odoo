@@ -3,7 +3,7 @@
     <record id="view_mrp_workcenter_form_inherit_labels" model="ir.ui.view">
         <field name="name">mrp.workcenter.form.inherit.labels</field>
         <field name="model">mrp.workcenter</field>
-        <field name="inherit_id" ref="mrp.view_mrp_workcenter_form"/>
+        <field name="inherit_id" ref="mrp.mrp_workcenter_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='code']" position="after">
                 <field name="label_prefix"/>
