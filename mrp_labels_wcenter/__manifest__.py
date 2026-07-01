@@ -20,7 +20,7 @@
         'barcodes',
     ],
     'data': [
-        'security/ir.model.access.csv',
+        #'security/ir.model.access.csv',
         'data/ir_sequence_data.xml',
         'report/paperformat_data.xml',
         'report/production_label_template.xml',
