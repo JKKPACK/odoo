@@ -62,7 +62,7 @@ class MrpProductionLabelWizard(models.TransientModel):
         return self.env.ref('tu_modulo_mrp.action_report_production_labels').report_action(created_labels)
 
 
-class MrpProductionLabelWizardLine(fields.TransientModel):
+class MrpProductionLabelWizardLine(models.TransientModel): #  Correcto
     _name = 'mrp.production.label.wizard.line'
     _description = 'Línea de captura individual de Peso'
 
