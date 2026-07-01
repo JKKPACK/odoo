@@ -16,16 +16,16 @@
                             <field name="qty_labels"/>
                         </group>
                     </group>
-                    <notebook>
-                        <page string="Pesos por Rollo/Caja" name="weights">
-                            <field name="line_ids">
-                                <list editable="bottom" create="0" delete="0">
-                                    <field name="sequence_no"/>
-                                    <field name="weight" sum="Total Peso Capturado"/>
-                                </list>
-                            </field>
-                        </page>
-                    </notebook>
+                        <notebook>
+                            <page string="Pesos por Rollo/Caja" name="weights">
+                                <field name="line_ids" readonly="0">
+                                    <list editable="bottom" create="0" delete="0">
+                                        <field name="sequence_no" readonly="1"/>
+                                        <field name="weight" readonly="0" sum="Total Peso Capturado"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
                 </sheet>
                 <footer>
                     <button string="Generar e Imprimir Tira" name="generate_and_print_labels" type="object" class="btn-primary"/>
