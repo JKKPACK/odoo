@@ -1,0 +1,6 @@
+<record id="seq_mrp_production_roll_labels" model="ir.sequence">
+    <field name="name">Secuencia Global de Rollos de Manufactura</field>
+    <field name="code">mrp.production.label.sequence</field>
+    <field name="padding">8</field>
+    <field name="company_id" eval="False"/>
+</record>
