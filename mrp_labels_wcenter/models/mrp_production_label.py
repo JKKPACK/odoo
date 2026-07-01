@@ -14,5 +14,5 @@ class MrpProductionLabel(models.Model):
     operator_id = fields.Many2one('res.users', string="Operador", default=lambda self: self.env.user)
 
     # Campos adicionales solicitados para la estructura de la etiqueta
-    caliber = fields.Float(string="Calibre", related='product_id.product_tmpl_id.caliber_field_custom', readonly=False) # Ajustar al campo real en tu product.template
-    width = fields.Float(string="Ancho", related='product_id.product_tmpl_id.width_field_custom', readonly=False)   # Ajustar al campo real
+   # caliber = fields.Float(string="Calibre", related='product_id.product_tmpl_id.caliber_field_custom', readonly=False) # Ajustar al campo real en tu product.template
+   # width = fields.Float(string="Ancho", related='product_id.product_tmpl_id.width_field_custom', readonly=False)   # Ajustar al campo real
