@@ -20,8 +20,8 @@
                             <strong style="font-size: 13px;" t-field="label.product_id.name"/><br/>
                             
                             <span style="font-size: 9px;">Orden Fabricación / Job Order:</span> <span t-field="label.production_id.name"/><br/>
-                            <span style="font-size: 9px;">Calibre / Thickness:</span> <span t-field="label.caliber"/> KG<br/>
-                            <span style="font-size: 9px;">Ancho / Width:</span> <span t-field="label.width"/><br/>
+                            <!--<span style="font-size: 9px;">Calibre / Thickness:</span> <span t-field="label.caliber"/> KG<br/>
+                            <span style="font-size: 9px;">Ancho / Width:</span> <span t-field="label.width"/><br/> -->
                             
                             <div style="margin-top: 10px;">
                                 <span style="font-weight: bold; font-size: 11px;">Cantidad / Quantity:</span><br/>
