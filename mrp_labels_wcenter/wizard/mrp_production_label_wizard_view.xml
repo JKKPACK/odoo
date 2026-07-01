@@ -1,0 +1,30 @@
+<record id="view_mrp_production_label_wizard_form" model="ir.ui.view">
+    <field name="name">mrp.production.label.wizard.form</field>
+    <field name="model">mrp.production.label.wizard</field>
+    <field name="arch" type="type">
+        <form string="Pesaje de Producto Terminado e Impresión">
+            <sheet>
+                <group col="4">
+                    <field name="production_id" readonly="1"/>
+                    <field name="mo_expected_weight" readonly="1"/>
+                    <field name="workcenter_id" options="{'no_create': True}"/>
+                    <field name="qty_labels"/>
+                </group>
+                <notebook>
+                    <page string="Pesos por Rollo/Caja" name="weights">
+                        <field name="line_ids">
+                            <list editable="bottom" create="0" delete="0">
+                                <field name="sequence_no"/>
+                                <field name="weight" sum="Total Peso Capturado"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </sheet>
+            <footer>
+                <button string="Generar e Imprimir Tira" name="generate_and_print_labels" type="object" class="btn-primary"/>
+                <button string="Cancelar" class="btn-secondary" special="cancel"/>
+            </footer>
+        </form>
+    </field>
+</record>
