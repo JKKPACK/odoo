@@ -1,60 +1,63 @@
-<template id="report_production_label_template">
-    <t t-call="web.html_container">
-        <t t-foreach="docs" t-as="label">
-            <div class="page" style="width: 4in; height: 6in; padding: 5px; font-family: Arial, sans-serif; font-size: 11px; position: relative; border: 1px dashed #ccc;">
-                <div style="text-align: center; font-weight: bold; font-size: 14px;">JKKPack, S.A. DE C.V.</div>
-                
-                <table style="width: 100%; margin-top: 5px;">
-                    <tr>
-                        <td style="width: 65%;">
-                            <span style="font-size: 10px; color:#555;">Artículo / Item</span><br/>
-                            <strong style="font-size: 16px;" t-field="label.product_id.default_code"/><br/>
-                            
-                            <div style="margin-top:4px;">
-                                <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', label.product_id.default_code, 400, 40)" style="width:180px;height:30px;"/>
-                                <div style="text-align: center; width: 180px; font-size: 8px;" t-field="label.product_id.default_code"/>
-                            </div>
-                            
-                            <hr style="margin: 4px 0; border-top: 1px solid black;"/>
-                            
-                            <strong style="font-size: 13px;" t-field="label.product_id.name"/><br/>
-                            
-                            <span style="font-size: 9px;">Orden Fabricación / Job Order:</span> <span t-field="label.production_id.name"/><br/>
-                            <!--<span style="font-size: 9px;">Calibre / Thickness:</span> <span t-field="label.caliber"/> KG<br/>
-                            <span style="font-size: 9px;">Ancho / Width:</span> <span t-field="label.width"/><br/> -->
-                            
-                            <div style="margin-top: 10px;">
-                                <span style="font-weight: bold; font-size: 11px;">Cantidad / Quantity:</span><br/>
-                                <span style="font-size: 22px; font-weight: bold;" t-esc="'%.4f' % label.weight"/> <strong>KG</strong>
-                            </div>
-                        </td>
-                        
-                        <td style="width: 35%; text-align: right; vertical-align: top; padding-left: 5px;">
-                            <div style="writing-mode: vertical-rl; transform: rotate(0deg); text-align: center; float: right;">
-                                <span style="font-size: 9px; font-weight: bold;">Lote/Batch: <span t-field="label.name"/></span>
-                                <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', label.name, 400, 40)" style="width:40px; height:180px; margin-top:5px;"/>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-
-                <div style="position: absolute; bottom: 5px; width: 95%;">
-                    <hr style="margin: 4px 0; border-top: 1px solid black;"/>
-                    <table style="width: 100%;">
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_production_label_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="label">
+                <div class="page" style="width: 4in; height: 6in; padding: 5px; font-family: Arial, sans-serif; font-size: 11px; position: relative;">
+                    <div style="text-align: center; font-weight: bold; font-size: 14px;">JKKPack, S.A. DE C.V.</div>
+                    
+                    <table style="width: 100%; margin-top: 5px;">
                         <tr>
-                            <td style="width: 30%;">
-                                <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('QR', label.product_id.default_code + '|' + label.name + '|' + str(label.weight), 150, 150)" style="width: 65px; height: 65px;"/>
+                            <td style="width: 65%;">
+                                <span style="font-size: 10px; color:#555;">Artículo / Item</span><br/>
+                                <strong style="font-size: 16px;" t-field="label.product_id.default_code"/><br/>
+                                
+                                <div style="margin-top:4px;">
+                                    <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', label.product_id.default_code, 400, 40)" style="width:180px;height:30px;"/>
+                                    <div style="text-align: center; width: 180px; font-size: 8px;" t-field="label.product_id.default_code"/>
+                                </div>
+                                
+                                <hr style="margin: 4px 0; border-top: 1px solid black;"/>
+                                
+                                <strong style="font-size: 13px;" t-field="label.product_id.name"/><br/>
+                                
+                                <span style="font-size: 9px;">Orden Fabricación / Job Order:</span> <span t-field="label.production_id.name"/><br/>
+                                <span style="font-size: 9px;">Calibre / Thickness:</span> <span>Pendiente</span><br/>
+                                <span style="font-size: 9px;">Ancho / Width:</span> <span>Pendiente</span><br/>
+                                
+                                <div style="margin-top: 10px;">
+                                    <span style="font-weight: bold; font-size: 11px;">Cantidad / Quantity:</span><br/>
+                                    <span style="font-size: 22px; font-weight: bold;" t-esc="'%.4f' % label.weight"/> <strong>KG</strong>
+                                </div>
                             </td>
-                            <td style="width: 70%; font-size: 9px; vertical-align: middle;">
-                                <span>OF: <span t-field="label.production_id.name"/></span> | 
-                                <span>Artículo: <span t-field="label.product_id.default_code"/></span><br/>
-                                <strong>Lote: <span t-field="label.name"/></strong><br/>
-                                <span>Fecha: <span t-field="label.date_produced" t-options='{"widget": "datetime", "format": "dd/MM/yyyy HH:mm"}'/></span>
+                            
+                            <td style="width: 35%; text-align: right; vertical-align: top; padding-left: 5px;">
+                                <div style="writing-mode: vertical-rl; text-align: center; float: right;">
+                                    <span style="font-size: 9px; font-weight: bold;">Lote/Batch: <span t-field="label.name"/></span>
+                                    <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', label.name, 400, 40)" style="width:40px; height:180px; margin-top:5px;"/>
+                                </div>
                             </td>
                         </tr>
                     </table>
+
+                    <div style="position: absolute; bottom: 5px; width: 95%;">
+                        <hr style="margin: 4px 0; border-top: 1px solid black;"/>
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 30%;">
+                                    <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('QR', (label.product_id.default_code or '') + '|' + (label.name or '') + '|' + str(label.weight), 150, 150)" style="width: 65px; height: 65px;"/>
+                                </td>
+                                <td style="width: 70%; font-size: 9px; vertical-align: middle;">
+                                    <span>OF: <span t-field="label.production_id.name"/></span> | 
+                                    <span>Artículo: <span t-field="label.product_id.default_code"/></span><br/>
+                                    <strong>Lote: <span t-field="label.name"/></strong><br/>
+                                    <span>Fecha: <span t-field="label.date_produced" t-options='{"widget": "datetime", "format": "dd/MM/yyyy HH:mm"}'/></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </t>
         </t>
-    </t>
-</template>
+    </template>
+</odoo>
