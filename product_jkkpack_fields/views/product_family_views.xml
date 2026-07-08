@@ -1,0 +1,39 @@
+<!-- views/product_family_views.xml -->
+<odoo>
+    <record id="view_product_family_tree" model="ir.ui.view">
+        <field name="name">product.family.tree</field>
+        <field name="model">product.family</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="description"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_product_family_form" model="ir.ui.view">
+        <field name="name">product.family.form</field>
+        <field name="model">product.family</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="description"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_product_family_config"
+              name="Familias de producto"
+              parent="stock.menu_stock_config"
+              action="action_product_family"/>
+
+    <record id="action_product_family" model="ir.actions.act_window">
+        <field name="name">Familias de producto</field>
+        <field name="res_model">product.family</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>
