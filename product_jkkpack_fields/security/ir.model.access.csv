@@ -1,0 +1,2 @@
+# security/ir.model.access.csv
+access_product_family_user,access.product.family.user,model_product_family,base.group_user,1,1,1,1
