@@ -28,7 +28,7 @@
 
     <menuitem id="menu_product_family_config"
           name="Familias de producto"
-          parent="product.menu_product_config"
+          parent="stock.menu_stock_root"
           action="action_product_family"/>
 
     <record id="action_product_family" model="ir.actions.act_window">
