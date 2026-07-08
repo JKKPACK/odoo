@@ -7,9 +7,9 @@
     'category': 'Inventory',
     'description': 'Añade pestaña JKKPACK con campos personalizados en productos',
     'data': [
+        'security/ir.model.access.csv', # <--- Primero la seguridad
         'views/product_template_views.xml',
         'views/product_family_views.xml',
-        'security/ir.model.access.csv',
     ],
     'installable': True,
 }
