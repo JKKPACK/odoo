@@ -1,0 +1,21 @@
+<!-- views/product_template_views.xml -->
+<odoo>
+    <record id="view_product_template_form_jkkpack" model="ir.ui.view">
+        <field name="name">product.template.form.jkkpack</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="JKKPACK">
+                    <group>
+                        <field name="x_width"/>
+                        <field name="x_caliber"/>
+                        <field name="x_density"/>
+                        <field name="x_conversion_factor"/>
+                        <field name="x_product_family_id"/>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>
