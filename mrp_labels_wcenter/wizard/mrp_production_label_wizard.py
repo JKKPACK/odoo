@@ -59,7 +59,7 @@ class MrpProductionLabelWizard(models.TransientModel):
             created_labels |= label
 
         # Retornar la acción de impresión del reporte QWeb con los registros recién creados
-        return self.env.ref('tu_modulo_mrp.action_report_production_labels').report_action(created_labels)
+        return self.env.ref('mrp_labels_wcenter.action_report_production_labels').report_action(created_labels)
 
 
 class MrpProductionLabelWizardLine(models.TransientModel): #  Correcto
