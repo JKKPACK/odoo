@@ -3,3 +3,5 @@ access_mrp_production_label_admin,mrp.production.label.admin,model_mrp_productio
 access_mrp_production_label_user,mrp.production.label.user,model_mrp_production_label,mrp.group_mrp_user,1,1,1,1
 access_mrp_production_label_wizard_admin,mrp.production.label.wizard.admin,model_mrp_production_label_wizard,mrp.group_mrp_manager,1,1,1,1
 access_mrp_production_label_wizard_user,mrp.production.label.wizard.user,model_mrp_production_label_wizard,mrp.group_mrp_user,1,1,1,1
+access_mrp_production_label_wizard_line_admin,mrp.production.label.wizard.line.admin,model_mrp_production_label_wizard_line,mrp.group_mrp_manager,1,1,1,1
+access_mrp_production_label_wizard_line_user,mrp.production.label.wizard.line.user,model_mrp_production_label_wizard_line,mrp.group_mrp_user,1,1,1,1
