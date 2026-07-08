@@ -1,4 +1,3 @@
-<!-- views/product_family_views.xml -->
 <odoo>
     <record id="view_product_family_list" model="ir.ui.view">
         <field name="name">product.family.list</field>
@@ -26,14 +25,14 @@
         </field>
     </record>
 
-    <menuitem id="menu_product_family_config"
-          name="Familias de producto"
-          parent="stock.menu_stock_root"
-          action="action_product_family"/>
-
     <record id="action_product_family" model="ir.actions.act_window">
         <field name="name">Familias de producto</field>
         <field name="res_model">product.family</field>
         <field name="view_mode">list,form</field>
     </record>
+
+    <menuitem id="menu_product_family_config"
+              name="Familias de producto"
+              parent="stock.menu_stock_root"
+              action="action_product_family"/>
 </odoo>
