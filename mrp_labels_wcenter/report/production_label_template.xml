@@ -12,9 +12,9 @@
                                 <span style="font-size: 10px; color:#555;">Artículo / Item</span><br/>
                                 <strong style="font-size: 16px;" t-field="label.product_id.default_code"/><br/>
                                 
-                                <div style="margin-top:4px;">
-                                    <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', label.product_id.default_code, 400, 40)" style="width:180px;height:30px;"/>
-                                    <div style="text-align: center; width: 180px; font-size: 8px;" t-field="label.product_id.default_code"/>
+                                <div style="margin-top:4px; width: 180px;">
+                                    <div t-out="label.product_id.default_code" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 400, 'height': 40, 'img_style': 'width:180px; height:30px;'}"/>
+                                    <div style="text-align: center; font-size: 8px;" t-field="label.product_id.default_code"/>
                                 </div>
                                 
                                 <hr style="margin: 4px 0; border-top: 1px solid black;"/>
@@ -34,7 +34,9 @@
                             <td style="width: 35%; text-align: right; vertical-align: top; padding-left: 5px;">
                                 <div style="writing-mode: vertical-rl; text-align: center; float: right;">
                                     <span style="font-size: 9px; font-weight: bold;">Lote/Batch: <span t-field="label.name"/></span>
-                                    <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', label.name, 400, 40)" style="width:40px; height:180px; margin-top:5px;"/>
+                                    <div style="margin-top:5px;">
+                                        <div t-out="label.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 40, 'height': 400, 'img_style': 'width:35px; height:180px;'}"/>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -45,7 +47,8 @@
                         <table style="width: 100%;">
                             <tr>
                                 <td style="width: 30%;">
-                                    <img t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('QR', (label.product_id.default_code or '') + '|' + (label.name or '') + '|' + str(label.weight), 150, 150)" style="width: 65px; height: 65px;"/>
+                                    <t t-set="qr_data" t-value="f'{label.product_id.default_code or \'\'}|{label.name or \'\'}|{label.weight or 0.0}'"/>
+                                    <div t-out="qr_data" t-options="{'widget': 'barcode', 'symbology': 'QR', 'width': 150, 'height': 150, 'img_style': 'width: 65px; height: 65px;'}"/>
                                 </td>
                                 <td style="width: 70%; font-size: 9px; vertical-align: middle;">
                                     <span>OF: <span t-field="label.production_id.name"/></span> | 
