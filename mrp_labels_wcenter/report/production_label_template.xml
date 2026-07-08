@@ -47,7 +47,7 @@
                         <table style="width: 100%;">
                             <tr>
                                 <td style="width: 30%;">
-                                    <t t-set="qr_data" t-value="f'{label.product_id.default_code or \'\'}|{label.name or \'\'}|{label.weight or 0.0}'"/>
+                                    <t t-set="qr_data" t-value="(label.product_id.default_code or '') + '|' + (label.name or '') + '|' + str(label.weight or 0.0)"/>
                                     <div t-out="qr_data" t-options="{'widget': 'barcode', 'symbology': 'QR', 'width': 150, 'height': 150, 'img_style': 'width: 65px; height: 65px;'}"/>
                                 </td>
                                 <td style="width: 70%; font-size: 9px; vertical-align: middle;">
