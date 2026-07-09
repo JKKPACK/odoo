@@ -40,15 +40,12 @@
                             </td>
                             
                             <td style="width: 25%; vertical-align: top; text-align: right; padding-top: 10px;">
-                                <div style="width: 45px; float: right; text-align: center; border-left: 1px dashed #ddd; padding-left: 5px;">
-                                    <div style="font-size: 10px; font-weight: bold; line-height: 11px; text-align: center; margin-bottom: 5px; word-wrap: break-word;">
-                                        L<br/>o<br/>t<br/>e<br/>:<br/><br/>
-                                        <t t-foreach="label.name" t-as="char">
-                                            <span t-esc="char"/><br/>
-                                        </t>
-                                    </div>
-                                    <div style="display: inline-block; width: 32px; height: 180px; overflow: hidden;">
-                                        <div t-out="label.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 40, 'height': 400, 'img_style': 'width:30px; height:180px;'}"/>
+                                <div style="writing-mode: vertical-rl; text-align: center; width: 45px; height: 280px; float: right; padding-left: 10px; border-left: 1px dashed #ddd;">
+                                    <span style="font-size: 11px; font-weight: bold; margin-bottom: 8px; white-space: nowrap;">
+                                        Lote/Batch: <span t-field="label.name"/>
+                                    </span>
+                                    <div style="display: inline-block;">
+                                        <div t-out="label.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 45, 'height': 350, 'img_style': 'width:30px; height:180px;'}"/>
                                     </div>
                                 </div>
                             </td>
