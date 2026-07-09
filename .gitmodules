@@ -2,3 +2,8 @@
 	path = oskr1087/addons-jkk
 	url = git@github.com:oskr1087/addons-jkk.git
 	branch = 19.0
+
+[submodule "OCA/report-print-send"]
+	path = OCA/report-print-send
+	url = git@github.com:OCA/report-print-send.git
+	branch = 19.0
