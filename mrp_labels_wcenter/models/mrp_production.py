@@ -7,12 +7,16 @@ class MrpProduction(models.Model):
 
     def action_open_label_wizard(self):
         self.ensure_one()
-        # Calculamos la cantidad pendiente real a producir (Peso límite)
-        # En Odoo 19, qty_to_produce o la diferencia entre qty_producing y product_qty
-        weight_limit = self.product_qty - sum(label.weight for label in self.label_ids)
+        # Sumamos los pesos de etiquetas ya emitidas para esta orden
+        total_printed = sum(label.weight for label in self.label_ids)
+        # El límite restante debe ser el total de la orden menos lo ya pesado
+        weight_limit = self.product_qty - total_printed
         
+        # Encontrar el primer centro de trabajo de las operaciones para sugerirlo en el wizard
+        default_wc = self.workorder_ids[0].workcenter_id.id if self.workorder_ids else False
+
         return {
-            'name': _('Generar Etiquetas de Producción por Rollo'),
+            'name': 'Generar Etiquetas de Producción por Rollo',
             'type': 'ir.actions.act_window',
             'res_model': 'mrp.production.label.wizard',
             'view_mode': 'form',
@@ -20,5 +24,6 @@ class MrpProduction(models.Model):
             'context': {
                 'default_production_id': self.id,
                 'default_mo_expected_weight': weight_limit if weight_limit > 0 else self.product_qty,
+                'default_workcenter_id': default_wc,
             }
         }
