@@ -46,6 +46,9 @@ class MrpProductionLabelWizard(models.TransientModel):
             if line.weight <= 0:
                 raise ValidationError(_("Cada rollo/etiqueta debe tener un peso asignado válido."))
                 
+            # PRIORIDAD: 1. Prefijo personalizado -> 2. Código nativo del Centro de Trabajo -> 3. "GEN" de respaldo
+            prefix = self.workcenter_id.label_prefix or self.workcenter_id.code or 'GEN'
+            
             # Consumir la secuencia global infinita
             seq_num = self.env['ir.sequence'].next_by_code('mrp.production.label.sequence')
             label_name = f"{prefix}{seq_num}"
@@ -57,6 +60,7 @@ class MrpProductionLabelWizard(models.TransientModel):
                 'weight': line.weight,
             })
             created_labels |= label
+    
 
         # Retornar la acción de impresión del reporte QWeb con los registros recién creados
         return self.env.ref('mrp_labels_wcenter.action_report_production_labels').report_action(created_labels)
