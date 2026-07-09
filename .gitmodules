@@ -1,0 +1,4 @@
+[submodule "oskr1087/addons-jkk"]
+	path = oskr1087/addons-jkk
+	url = git@github.com:oskr1087/addons-jkk.git
+	branch = 19.0
