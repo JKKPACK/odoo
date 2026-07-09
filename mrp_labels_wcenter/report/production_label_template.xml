@@ -6,9 +6,9 @@
                 <div class="page" style="width: 4in; height: 6in; padding: 5px; font-family: Arial, sans-serif; font-size: 11px; position: relative;">
                     <div style="text-align: center; font-weight: bold; font-size: 14px;">JKKPack, S.A. DE C.V.</div>
                     
-                    <table style="width: 100%; margin-top: 5px;">
+                    <table style="width: 100%; margin-top: 5px; table-layout: fixed;">
                         <tr>
-                            <td style="width: 65%;">
+                            <td style="width: 70%; vertical-align: top;">
                                 <span style="font-size: 10px; color:#555;">Artículo / Item</span><br/>
                                 <strong style="font-size: 16px;" t-field="label.product_id.default_code"/><br/>
                                 
@@ -25,18 +25,28 @@
                                 <span style="font-size: 9px;">Calibre / Thickness:</span> <span>Pendiente</span><br/>
                                 <span style="font-size: 9px;">Ancho / Width:</span> <span>Pendiente</span><br/>
                                 
-                                <div style="margin-top: 10px;">
-                                    <span style="font-weight: bold; font-size: 11px;">Cantidad / Quantity:</span><br/>
-                                    <span style="font-size: 22px; font-weight: bold;" t-esc="'%.4f' % label.weight"/> <strong>KG</strong>
+                                <div style="margin-top: 15px;">
+                                    <table style="width: 100%;">
+                                        <tr>
+                                            <td style="vertical-align: middle; width: 50%;">
+                                                <span style="font-weight: bold; font-size: 11px;">Cantidad / Quantity:</span><br/>
+                                                <span style="font-size: 22px; font-weight: bold;" t-esc="'%.2f' % label.weight"/> <strong>KG</strong>
+                                            </td>
+                                            <td style="vertical-align: middle; width: 50%; text-align: left;">
+                                                <div t-out="'%.2f' % label.weight" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 40, 'img_style': 'width:110px; height:28px;'}"/>
+                                                <div style="font-size: 8px; text-align: center; width: 110px;" t-esc="'%.2f' % label.weight"/>
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </div>
                             </td>
                             
-                            <td style="width: 35%; text-align: right; vertical-align: top; padding-left: 5px;">
-                                <div style="writing-mode: vertical-rl; text-align: center; float: right;">
-                                    <span style="font-size: 9px; font-weight: bold;">Lote/Batch: <span t-field="label.name"/></span>
-                                    <div style="margin-top:5px;">
-                                        <div t-out="label.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 40, 'height': 400, 'img_style': 'width:35px; height:180px;'}"/>
-                                    </div>
+                            <td style="width: 30%; text-align: center; vertical-align: top; position: relative; padding-top: 20px;">
+                                <div style="transform: rotate(90deg); transform-origin: top left; position: absolute; top: 15px; left: 65px; width: 220px; white-space: nowrap; text-align: center;">
+                                    <span style="font-size: 10px; font-weight: bold; display: block; margin-bottom: 3px;">
+                                        Lote/Batch: <span t-field="label.name"/>
+                                    </span>
+                                    <div t-out="label.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 400, 'height': 50, 'img_style': 'width:200px; height:35px;'}"/>
                                 </div>
                             </td>
                         </tr>
@@ -47,7 +57,7 @@
                         <table style="width: 100%;">
                             <tr>
                                 <td style="width: 30%;">
-                                    <t t-set="qr_data" t-value="(label.product_id.default_code or '') + '|' + (label.name or '') + '|' + str(label.weight or 0.0)"/>
+                                    <t t-set="qr_data" t-value="(label.product_id.default_code or '') + '|' + (label.name or '') + '|' + str('%.2f' % label.weight)"/>
                                     <div t-out="qr_data" t-options="{'widget': 'barcode', 'symbology': 'QR', 'width': 150, 'height': 150, 'img_style': 'width: 65px; height: 65px;'}"/>
                                 </td>
                                 <td style="width: 70%; font-size: 9px; vertical-align: middle;">
