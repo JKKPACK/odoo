@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+# -*- coding: utf-8 -*-
+from odoo import models, fields, api, _
 
 class MrpProductionLabel(models.Model):
     _name = 'mrp.production.label'
@@ -13,6 +14,34 @@ class MrpProductionLabel(models.Model):
     date_produced = fields.Datetime(string="Fecha de Producción", default=fields.Datetime.now)
     operator_id = fields.Many2one('res.users', string="Operador", default=lambda self: self.env.user)
 
-    # Campos adicionales solicitados para la estructura de la etiqueta
-   # caliber = fields.Float(string="Calibre", related='product_id.product_tmpl_id.caliber_field_custom', readonly=False) # Ajustar al campo real en tu product.template
-   # width = fields.Float(string="Ancho", related='product_id.product_tmpl_id.width_field_custom', readonly=False)   # Ajustar al campo real
+
+# --- AGREGAMOS ESTO AQUÍ MISMO PARA FORZAR LA DETECCIÓN DEL BOTÓN ---
+class MrpProduction(models.Model):
+    _inherit = 'mrp.production'
+
+    label_ids = fields.One2many('mrp.production.label', 'production_id', string="Etiquetas Emitidas")
+
+    def action_open_label_wizard(self):
+        self.ensure_one()
+        # Sumamos los pesos de etiquetas ya emitidas para esta orden
+        total_printed = sum(label.weight for label in self.label_ids)
+        
+        # Forzamos tomar la cantidad total de la orden (21.7070 de tu pantalla)
+        mo_total_qty = self.product_qty
+        weight_limit = mo_total_qty - total_printed
+        
+        # Encontrar el primer centro de trabajo de las operaciones para sugerirlo en el wizard
+        default_wc = self.workorder_ids[0].workcenter_id.id if self.workorder_ids else False
+
+        return {
+            'name': 'Generar Etiquetas de Producción por Rollo',
+            'type': 'ir.actions.act_window',
+            'res_model': 'mrp.production.label.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_production_id': self.id,
+                'default_mo_expected_weight': weight_limit if weight_limit > 0 else mo_total_qty,
+                'default_workcenter_id': default_wc,
+            }
+        }
