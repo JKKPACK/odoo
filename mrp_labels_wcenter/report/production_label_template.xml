@@ -3,46 +3,59 @@
     <template id="report_production_label_template">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="label">
-                <div class="page" style="width: 4in; height: 6in; padding: 5px; font-family: Arial, sans-serif; font-size: 11px; position: relative; page-break-after: always;">
-                    <div style="text-align: center; font-weight: bold; font-size: 14px;">JKKPack, S.A. DE C.V.</div>
+                <div class="page" style="width: 4in; height: 6in; padding: 5px; font-family: Arial, sans-serif; font-size: 11px; position: relative; page-break-after: always; clear: both;">
+                    <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 5px;">JKKPack, S.A. DE C.V.</div>
                     
-                    <div style="position: absolute; right: 10px; top: 45px; width: 45px; height: 260px; text-align: center;">
-                        <div style="writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; font-weight: bold; height: 100%; display: flex; align-items: center; justify-content: center;">
-                            <span style="margin-left: 5px;">Lote/Batch: <span t-field="label.name"/></span>
-                            <div t-out="label.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 50, 'height': 400, 'img_style': 'width:30px; height:180px;'}"/>
-                        </div>
-                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 75%; vertical-align: top; padding-right: 10px;">
+                                <span style="font-size: 10px; color:#555;">Artículo / Item</span><br/>
+                                <strong style="font-size: 16px;" t-field="label.product_id.default_code"/><br/>
+                                
+                                <div style="margin-top:4px; width: 180px;">
+                                    <div t-out="label.product_id.default_code" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 400, 'height': 40, 'img_style': 'width:180px; height:30px;'}"/>
+                                    <div style="text-align: center; font-size: 8px;" t-field="label.product_id.default_code"/>
+                                </div>
+                                
+                                <hr style="margin: 6px 0; border-top: 1px solid black; width: 100%;"/>
+                                
+                                <strong style="font-size: 12px; display: block; min-height: 28px;" t-field="label.product_id.name"/><br/>
+                                
+                                <span style="font-size: 9px;">Orden Fabricación / Job Order:</span> <span t-field="label.production_id.name"/><br/>
+                                <span style="font-size: 9px;">Calibre / Thickness:</span> <span>Pendiente</span><br/>
+                                <span style="font-size: 9px;">Ancho / Width:</span> <span>Pendiente</span><br/>
+                                
+                                <table style="width: 100%; margin-top: 25px;">
+                                    <tr>
+                                        <td style="vertical-align: middle; width: 50%;">
+                                            <span style="font-weight: bold; font-size: 11px;">Cantidad / Quantity:</span><br/>
+                                            <span style="font-size: 22px; font-weight: bold;" t-esc="'%.4f' % label.weight"/> <strong>KG</strong>
+                                        </td>
+                                        <td style="vertical-align: middle; width: 50%; text-align: left; padding-top: 5px;">
+                                            <div t-out="'%.4f' % label.weight" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 40, 'img_style': 'width:110px; height:28px;'}"/>
+                                            <div style="font-size: 8px; text-align: center; width: 110px;" t-esc="'%.4f' % label.weight"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            
+                            <td style="width: 25%; vertical-align: top; text-align: right; padding-top: 10px;">
+                                <div style="width: 45px; float: right; text-align: center; border-left: 1px dashed #ddd; padding-left: 5px;">
+                                    <div style="font-size: 10px; font-weight: bold; line-height: 11px; text-align: center; margin-bottom: 5px; word-wrap: break-word;">
+                                        L<br/>o<br/>t<br/>e<br/>:<br/><br/>
+                                        <t t-foreach="label.name" t-as="char">
+                                            <span t-esc="char"/><br/>
+                                        </t>
+                                    </div>
+                                    <div style="display: inline-block; width: 32px; height: 180px; overflow: hidden;">
+                                        <div t-out="label.name" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 40, 'height': 400, 'img_style': 'width:30px; height:180px;'}"/>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
 
-                    <div style="width: 70%; float: left; margin-top: 5px;">
-                        <span style="font-size: 10px; color:#555;">Artículo / Item</span><br/>
-                        <strong style="font-size: 16px;" t-field="label.product_id.default_code"/><br/>
-                        
-                        <div style="margin-top:4px; width: 180px;">
-                            <div t-out="label.product_id.default_code" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 400, 'height': 40, 'img_style': 'width:180px; height:30px;'}"/>
-                            <div style="text-align: center; font-size: 8px;" t-field="label.product_id.default_code"/>
-                        </div>
-                        
-                        <hr style="margin: 6px 0; border-top: 1px solid black; width: 95%;"/>
-                        
-                        <strong style="font-size: 12px; display: block; max-height: 32px; overflow: hidden;" t-field="label.product_id.name"/><br/>
-                        
-                        <span style="font-size: 9px;">Orden Fabricación / Job Order:</span> <span t-field="label.production_id.name"/><br/>
-                        <span style="font-size: 9px;">Calibre / Thickness:</span> <span>Pendiente</span><br/>
-                        <span style="font-size: 9px;">Ancho / Width:</span> <span>Pendiente</span><br/>
-                        
-                        <div style="margin-top: 20px; width: 100%;">
-                            <div style="float: left; width: 50%;">
-                                <span style="font-weight: bold; font-size: 11px;">Cantidad / Quantity:</span><br/>
-                                <span style="font-size: 22px; font-weight: bold;" t-esc="'%.4f' % label.weight"/> <strong>KG</strong>
-                            </div>
-                            <div style="float: left; width: 50%; padding-top: 5px;">
-                                <div t-out="'%.4f' % label.weight" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 40, 'img_style': 'width:110px; height:28px;'}"/>
-                                <div style="font-size: 8px; text-align: center; width: 110px;" t-esc="'%.4f' % label.weight"/>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="position: absolute; bottom: 5px; width: 95%; clear: both;">
+                    <div style="position: absolute; bottom: 5px; width: 95%;">
                         <hr style="margin: 4px 0; border-top: 1px solid black;"/>
                         <table style="width: 100%;">
                             <tr>
