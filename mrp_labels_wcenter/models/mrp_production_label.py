@@ -23,15 +23,17 @@ class MrpProduction(models.Model):
 
     def action_open_label_wizard(self):
         self.ensure_one()
-        # Sumamos los pesos de las etiquetas ya emitidas
+        # Sumamos los pesos de las etiquetas ya emitidas en el histórico de nuestro módulo
         total_printed = sum(label.weight for label in self.label_ids)
         
-        # Extraemos el valor bruto de la cantidad a producir directo de la pantalla principal de Odoo
-        # Si qty_to_produce es cero por el estado de la MO, forzamos product_qty de forma estricta
-        mo_total_qty = self.qty_to_produce if self.qty_to_produce > 0 else self.product_qty
+        # En Odoo 19 usamos product_qty (Cantidad Total Planeada de la MO)
+        # Si ya se produjo una parte en Odoo, la restamos con qty_produced
+        mo_remaining_qty = self.product_qty - self.qty_produced
         
-        # Si necesitas que SIEMPRE muestre los 21.7070 ignorando lo que ya imprimiste antes, usa: weight_limit = mo_total_qty
-        # Si prefieres que vaya restando el remanente, dejamos la resta:
+        # Si por alguna razón da menor o igual a cero, usamos la cantidad original de la cabecera como respaldo
+        mo_total_qty = mo_remaining_qty if mo_remaining_qty > 0 else self.product_qty
+        
+        # El límite del asistente será lo que falta por etiquetar en esta corrida
         weight_limit = mo_total_qty - total_printed
         
         default_wc = self.workorder_ids[0].workcenter_id.id if self.workorder_ids else False
