@@ -32,9 +32,9 @@
 
 ^FO40,270^FB600,2,0,L,0^A0N,32,32^FD<t t-esc="line.product_id.name"/>^FS
 
-<!-- CORREGIDO: Configuración explícita del Code 128 vertical con parámetros de grosor (2) y altura (70) -->
-^FO660,200^BVR,70,N,N,N^FD<t t-esc="line.lot_name or line.lot_id.name or 'SIN_LOTE'"/>^FS
-^FO740,200^A0R,22,22^FD<t t-esc="line.lot_name or line.lot_id.name or 'SIN_LOTE'"/>^FS
+<!-- CORREGIDO: Uso de ^BC con orientación 'R' (Rotated 90°) y altura de 50 puntos para las barras del lote -->
+^FO670,200^BCR,50,N,N,N^FD<t t-esc="line.lot_name or line.lot_id.name or 'SIN_LOTE'"/>^FS
+^FO740,200^A0R,24,24^FD<t t-esc="line.lot_name or line.lot_id.name or 'SIN_LOTE'"/>^FS
 
 ^FO40,370^A0N,28,28^FDOrden de Compra: <t t-esc="line.picking_id.purchase_id.name or 'S/N'"/>^FS
 
