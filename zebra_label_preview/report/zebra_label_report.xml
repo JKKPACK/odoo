@@ -32,8 +32,8 @@
 
 ^FO40,270^FB600,2,0,L,0^A0N,32,32^FD<t t-esc="line.product_id.name"/>^FS
 
-^FO680,240^BVR,110,N,N,N^FD<t t-esc="line.lot_id.name or 'SIN_LOTE'"/>^FS
-^FO760,240^A0R,22,22^FD<t t-esc="line.lot_id.name or 'SIN_LOTE'"/>^FS
+^FO680,240^BVR,110,N,N,N^FD<t t-esc="line.lot_name or line.lot_id.name or 'SIN_LOTE'"/>^FS
+^FO760,240^A0R,22,22^FD<t t-esc="line.lot_name or line.lot_id.name or 'SIN_LOTE'"/>^FS
 
 ^FO40,370^A0N,28,28^FDOrden de Compra: <t t-esc="line.picking_id.purchase_id.name or 'S/N'"/>^FS
 
