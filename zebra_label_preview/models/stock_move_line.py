@@ -17,13 +17,14 @@ class StockMoveLine(models.Model):
     # Campo computado para la recolección del escáner en inventarios físicos
     x_qr_content = fields.Char(compute='_compute_qr_content', string="Contenido Código QR")
 
-    @api.depends('product_id', 'lot_id', 'quantity')
+    @api.depends('product_id', 'lot_id', 'lot_name', 'quantity')
     def _compute_qr_content(self):
         for line in self:
             product_code = line.product_id.default_code or ''
-            lot_name = line.lot_id.name or ''
+            # Prioridad: 1. Campo de entrada provisional 'lot_name' -> 2. Campo persistido 'lot_id.name'
+            lot_name = line.lot_name or (line.lot_id.name if line.lot_id else '') or ''
             qty = line.quantity or 0.0
-            # Estructura requerida: CódigoArticulo|Lote|Cantidad
+            # Formato estándar solicitado: CódigoArticulo|Lote|Cantidad
             line.x_qr_content = f"{product_code}|{lot_name}|{qty:.2f}"
 
     def action_open_label_preview(self):
@@ -33,7 +34,7 @@ class StockMoveLine(models.Model):
         # XML ID de nuestro reporte personalizado
         report_ref = 'zebra_label_preview.action_report_zebra_jkkpack'
         
-        # 1. ADAPTADO PARA ODOO 19.0: Invocación usando report_ref y docids de forma explícita
+        # 1. Invocación adaptada para Odoo 19.0 usando parámetros explícitos
         zpl_content_bytes, report_type = self.env['ir.actions.report']._render_qweb_text(
             report_ref=report_ref, 
             docids=self.ids
