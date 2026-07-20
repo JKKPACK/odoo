@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_picking_form_inherit_purchase_prices"
+                model="ir.ui.view">
+
+            <field name="name">
+                stock.picking.form.inherit.purchase.prices
+            </field>
+
+            <field name="model">stock.picking</field>
+
+            <field name="inherit_id"
+                   ref="stock.view_picking_form"/>
+
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='move_ids']/list/field[@name='product_uom']"
+                       position="after">
+
+                    <field name="purchase_price_unit"
+                           string="Precio Unitario"
+                           readonly="1"
+                           optional="show"/>
+
+                    <field name="purchase_subtotal"
+                           string="Subtotal"
+                           readonly="1"
+                           optional="show"/>
+
+                </xpath>
+
+                <xpath expr="//sheet"
+                       position="inside">
+
+                    <group name="purchase_financial_total">
+
+                        <field name="purchase_total"
+                               string="Total Recibido"
+                               readonly="1"/>
+
+                    </group>
+
+                </xpath>
+
+            </field>
+
+        </record>
+
+    </data>
+</odoo>
