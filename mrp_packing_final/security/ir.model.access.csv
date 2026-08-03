@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mrp_pallet, mrp.pallet, model_mrp_pallet, base.group_user,1,1,1,1
+access_mrp_box, mrp.box, model_mrp_box, base.group_user,1,1,1,1
+access_pallet_wizard, pallet.wizard, model_pallet_start_wizard, base.group_user,1,1,1,1
+access_box_entry_wizard, box.entry.wizard, model_box_entry_wizard, base.group_user,1,1,1,1
+access_box_entry_line, box.entry.line, model_box_entry_line, base.group_user,1,1,1,1

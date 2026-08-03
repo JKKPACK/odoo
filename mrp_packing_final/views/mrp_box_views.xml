@@ -1,0 +1,16 @@
+<odoo>
+  <record id="view_mrp_box_list" model="ir.ui.view">
+    <field name="name">mrp.box.list</field>
+    <field name="model">mrp.box</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/>
+        <field name="pallet_id"/>
+        <field name="master_lot"/>
+        <field name="peso_bruto"/>
+        <field name="peso_neto"/>
+        <field name="qty_per_box"/>
+      </list>
+    </field>
+  </record>
+</odoo>
