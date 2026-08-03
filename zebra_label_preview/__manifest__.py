@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Zebra ZT411 Label Custom Print & Preview',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.1',
     'summary': 'Generación de etiquetas ZPL para Zebra ZT411 con vista previa interactiva vía Labelary API',
     'category': 'Inventory/Warehouse',
     'author': 'Odoo Consultant',
