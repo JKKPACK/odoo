@@ -20,11 +20,7 @@ class StockMove(models.Model):
         report_ref = 'zebra_label_preview.action_report_zebra_jkkpack'
         
         # 1. Renderizar todas las líneas a texto ZPL
-        zpl_content_bytes, report_type = self.env['ir.actions.report']._render_qweb_text(
-            report_ref,
-            data={},
-            res_ids=move_lines.ids
-        )
+        zpl_content_bytes, report_type = self.env['ir.actions.report']._render(report_ref, res_ids=move_lines.ids, data={})
         
         # Asegurar decodificación limpia de los comandos de texto nativos
         zpl_text = zpl_content_bytes.decode('utf-8') if isinstance(zpl_content_bytes, bytes) else zpl_content_bytes
