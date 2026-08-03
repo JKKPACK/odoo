@@ -26,113 +26,91 @@
 ^PR4
 ^MD12
 ^LR
-
 ^FO50,50
 ^FB1100,1,0,C,0
 ^A0N,66,66
 ^FD<t t-esc="line.company_id.name"/>
 ^FS
-
 ^FO50,130^A0N,33,33^FDArticulo^FS
 ^FO650,130^A0N,33,33^FDEntrada de Mercancia^FS
-
 ^FO50,175
 ^A0N,54,54
 ^FD<t t-esc="line.product_id.default_code or 'SIN_CODIGO'"/>
 ^FS
-
 ^FO650,175
 ^A0N,48,48
 ^FD<t t-esc="line.picking_id.name or 'WH/IN/XXXXX'"/>
 ^FS
-
 ^FO50,270
 ^BCN,140,N,N,N
 ^FD<t t-esc="line.product_id.default_code or '000000'"/>
 ^FS
-
 ^FO50,450
 ^FB900,3,5,L,0
 ^A0N,48,48
 ^FD<t t-esc="line.product_id.name"/>
 ^FS
-
 ^FO980,330
 ^BVR,180,N,N,N
 ^FD<t t-esc="line.lot_id.name or 'SIN_LOTE'"/>
 ^FS
-
 ^FO1070,330
 ^A0R,33,33
 ^FD<t t-esc="line.lot_id.name or 'SIN_LOTE'"/>
 ^FS
-
 ^FO50,610
 ^A0N,42,42
 ^FDOrden de Compra: <t t-esc="line.picking_id.purchase_id.name or 'S/N'"/>
 ^FS
-
 ^FO50,680
 ^A0N,36,36
 ^FDTIPO MATERIAL: <t t-esc="line.product_id.categ_id.name"/>
 ^FS
-
 ^FO50,740
 ^A0N,36,36
 ^FDCALIBRE: <t t-esc="'%.2f' % line.x_calibre"/>
 ^FS
-
 ^FO650,740
 ^A0N,36,36
 ^FDANCHO: <t t-esc="'%.2f' % line.x_ancho"/>
 ^FS
-
 ^FO50,830
 ^A0N,42,42
 ^FDCantidad: <t t-esc="'%.2f' % line.quantity"/>
 <t t-esc="line.product_uom_id.name or 'Kilos'"/>
 ^FS
-
 ^FO50,900
 ^BCN,100,N,N,N
 ^FD<t t-esc="'%.2f' % line.quantity"/>
 ^FS
-
 ^FO570,1010
 ^A0N,30,30
 ^FD<t t-esc="'%.2f' % line.quantity"/>
 ^FS
-
 ^FO50,1090
 ^A0N,36,36
 ^FDFactura: <t t-esc="line.x_factura_proveedor or ''"/>
 ^FS
-
 ^FO50,1150
 ^A0N,36,36
 ^FDRollo Proveedor: <t t-esc="line.x_rollo_proveedor or ''"/>
 ^FS
-
 ^FO50,1210
 ^A0N,36,36
 ^FDLote Proveedor: <t t-esc="line.x_lote_proveedor or ''"/>
 ^FS
-
 ^FO50,1300
 ^A0N,36,36
 ^FDRecibe: <t t-esc="line.write_uid.name"/>
 ^FS
-
 ^FO50,1360
 ^A0N,36,36
 ^FDFecha: <t t-esc="line.write_date.strftime('%d/%m/%Y %H:%M') if line.write_date else ''"/>
 ^FS
-
 ^FO760,1080
 ^BQN,2,8
 ^FDQA,<t t-esc="line.x_qr_content"/>
 ^FS
-
 ^XZ
 </t>
 </t>

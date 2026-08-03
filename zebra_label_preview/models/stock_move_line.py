@@ -62,18 +62,19 @@ class StockMoveLine(models.Model):
                     )
 
     def action_open_label_preview(self):
-        """ Procesa el QWeb en texto ZPL y solicita el render PNG a Labelary """
-        self.ensure_one()
+        """ Procesa el QWeb en texto ZPL y solicita el render PNG a Labelary PARA TODAS LAS LÍNEAS SELECCIONADAS """
+        if not self:
+            raise UserError(_("Debe seleccionar al menos una línea"))
         
         # XML ID de nuestro reporte personalizado
         report_ref = 'zebra_label_preview.action_report_zebra_jkkpack'
         
-        # 1. ADAPTADO PARA ODOO 19.0: Renderizar el QWeb a texto
-        # Firma en Odoo 19: _render_qweb_text(report_ref, data, res_ids)
+        # 1. ADAPTADO PARA ODOO 19.0: Renderizar el QWeb a texto para TODAS las líneas
+        # Firma en Odoo 19: _render_qweb_text(report_ref, res_ids)
+        # ✅ Pasar todos los IDs como argumento posicional
         zpl_content_bytes, report_type = self.env['ir.actions.report']._render_qweb_text(
             report_ref,
-            data={},
-            res_ids=self.ids
+            self.ids  # ✅ Pasar todos los IDs como argumento posicional
         )
         
         # Asegurar decodificación limpia de los comandos de texto nativos
@@ -90,15 +91,18 @@ class StockMoveLine(models.Model):
             if response.status_code == 200:
                 image_base64 = base64.b64encode(response.content).decode('utf-8')
                 
-                # 3. Crear el registro del asistente y retornar la ventana modal
+                # 3. Crear el registro del asistente usando solo campos existentes
+                # Guardar los IDs como un comentario especial al inicio del ZPL
+                zpl_with_ids = f"{{{{IDS:{self.ids}}}}}\n{zpl_text}"
+                
                 wizard = self.env['stock.label.preview.wizard'].create({
-                    'move_line_id': self.id,
+                    'move_line_id': self[0].id if self else False,  # Primera línea para referencia
                     'preview_image': image_base64,
-                    'zpl_code': zpl_text,
+                    'zpl_code': zpl_with_ids,
                 })
                 
                 return {
-                    'name': _('Vista Previa de Etiqueta - Zebra ZT411'),
+                    'name': _('Vista Previa de Etiqueta - Zebra ZT411 (%d líneas)') % len(self),
                     'type': 'ir.actions.act_window',
                     'res_model': 'stock.label.preview.wizard',
                     'view_mode': 'form',
@@ -121,8 +125,7 @@ class StockMoveLine(models.Model):
         # 1. Renderizar todas las líneas a texto ZPL
         zpl_content_bytes, report_type = self.env['ir.actions.report']._render_qweb_text(
             report_ref,
-            data={},
-            res_ids=self.ids
+            self.ids
         )
         
         # Asegurar decodificación limpia de los comandos de texto nativos
@@ -138,10 +141,13 @@ class StockMoveLine(models.Model):
                 image_base64 = base64.b64encode(response.content).decode('utf-8')
                 
                 # 3. Crear el registro del asistente y retornar la ventana modal
+                # Guardar los IDs como un comentario especial al inicio del ZPL
+                zpl_with_ids = f"{{{{IDS:{self.ids}}}}}\n{zpl_text}"
+                
                 wizard = self.env['stock.label.preview.wizard'].create({
                     'move_line_id': self[0].id if len(self) == 1 else False,
                     'preview_image': image_base64,
-                    'zpl_code': zpl_text,
+                    'zpl_code': zpl_with_ids,
                 })
                 
                 return {
