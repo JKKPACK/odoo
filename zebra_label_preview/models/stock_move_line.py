@@ -21,7 +21,7 @@ class StockMoveLine(models.Model):
     def _compute_qr_content(self):
         for line in self:
             product_code = line.product_id.default_code or ''
-            lot_name = line.lot_id.name or ''
+            lot_name = line.lot_name or ''
             qty = line.quantity or 0.0
             # Estructura requerida: CódigoArticulo|Lote|Cantidad
             line.x_qr_content = f"{product_code}|{lot_name}|{qty:.2f}"
