@@ -35,14 +35,23 @@ class MrpPallet(models.Model):
     def generate_pallet_zpl(self):
         prod_code = self.product_id.default_code or ''
         prod_name = self.product_id.display_name or ''
-        return f"^XA\n^CF0,30\n^FO20,20^FDJkk Pack^FS\n^CF0,20\n^FO20,50^FDPedido/ Order No. {self.sale_order_id.name or ''}   Cod. Producto: {prod_code}   CantX Tarima: {self.total_qty:.2f}^FS\n^FO20,90^FDPedido Cliente: {self.customer_order_ref or ''}   Cajas por Tarima: {self.box_count}   Peso Bruto: {self.total_gross_weight:.2f} KG^FS\n^FO20,130^FDFecha: {self.date_packing.strftime('%d/%m/%Y') if self.date_packing else ''}   Peso Neto: {self.total_net_weight:.2f} KG^FS\n^FO20,170^FD{prod_name[:70]}^FS\n^FO20,200^FD{self.customer_name or ''} - {self.customer_code or ''}^FS\n^BY3,2,80^FO20,250^BCN,80,Y,N,A^FD{self.name}^FS\n^FO20,350^FD{self.name}^FS\n^XZ"
+        return f"""^XA
+^CF0,30
+^FO20,20^FDJkk Pack^FS
+^CF0,20
+^FO20,50^FDPedido/ Order No. {self.sale_order_id.name or ''}   Cod. Producto: {prod_code}   CantX Tarima: {self.total_qty:.2f}^FS
+^FO20,90^FDPedido Cliente: {self.customer_order_ref or ''}   Cajas por Tarima: {self.box_count}   Peso Bruto: {self.total_gross_weight:.2f} KG^FS
+^FO20,130^FDFecha: {self.date_packing.strftime('%d/%m/%Y') if self.date_packing else ''}   Peso Neto: {self.total_net_weight:.2f} KG^FS
+^FO20,170^FD{prod_name[:70]}^FS
+^FO20,200^FD{self.customer_name or ''} - {self.customer_code or ''}^FS
+^BY3,2,80^FO20,250^BCN,80,Y,N,A^FD{self.name}^FS
+^FO20,350^FD{self.name}^FS
+^XZ""".strip()
     def action_print_packing_list(self):
         return self.env.ref('mrp_packing_final.action_report_packing_list').report_action(self)
     def action_print_browser_master(self):
         return {'type':'ir.actions.act_url','url':f'/mrp_packing/print_pallet/{self.id}','target':'new'}
     def action_download_zpl_master(self):
         return {'type':'ir.actions.act_url','url':f'/mrp_packing/download_zpl_pallet/{self.id}','target':'self'}
-    def action_print_all_boxes(self):
-        return {'type':'ir.actions.act_url','url':f'/mrp_packing/print_all_boxes/{self.id}','target':'new'}
     def action_reprint_master_label(self):
         return {'type':'ir.actions.act_window','name':f'Etiqueta Master {self.name}','res_model':'pallet.start.wizard','view_mode':'form','target':'new','context':{'default_production_id':self.production_id.id,'default_pallet_id':self.id,'is_reprint':True}}

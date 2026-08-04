@@ -20,15 +20,19 @@ class MrpBox(models.Model):
     @api.depends('pallet_id.name','sequence')
     def _compute_name(self):
         for rec in self:
-            rec.name = f"{rec.pallet_id.name or 'NEW'}-{rec.sequence or 0}"
+            rec.name = f"{rec.pallet_id.name or 'NEW'}-{rec.sequence or 0}" if rec.pallet_id.name else f"NEW-{rec.sequence or 0}"
     def _compute_zpl(self):
         for rec in self:
             rec.zpl_box = rec.generate_box_zpl()
     def generate_box_zpl(self):
         prod = self.pallet_id.product_id
         prod_code = prod.default_code or ''
-        return f"^XA\n^CF0,20\n^FO10,10^FDO. Fab {self.pallet_id.production_id.name} Prod {prod_code} Rollo {self.master_lot or ''} Op {self.operador or ''}^FS\n^FO10,40^FDCliente {self.pallet_id.customer_code or ''} Fecha {self.pallet_id.date_packing.strftime('%d/%m/%Y') if self.pallet_id.date_packing else ''} Mill {self.mill_roll} Maq {self.pallet_id.machine}^FS\n^FO10,70^FDPedido {self.pallet_id.sale_order_id.name if self.pallet_id.sale_order_id else ''} Destiny {self.customer_item_no or ''} Neto {self.peso_neto} Box #{self.sequence} TARA {self.tara}^FS\n^FO10,100^FDLOTE/PALLET {self.pallet_id.name}^FS\n^BY3,2,70^FO10,150^BCN,70,Y,N,A^FD{self.name}^FS\n^FO10,230^FD{self.name}^FS\n^XZ"
-    def action_print_browser_box(self):
-        return {'type':'ir.actions.act_url','url':f'/mrp_packing/print_box/{self.id}','target':'new'}
-    def action_download_zpl_box(self):
-        return {'type':'ir.actions.act_url','url':f'/mrp_packing/download_zpl_box/{self.id}','target':'self'}
+        return f"""^XA
+^CF0,20
+^FO10,10^FDO. Fab {self.pallet_id.production_id.name} Prod {prod_code} Rollo {self.master_lot or ''} Op {self.operador or ''}^FS
+^FO10,40^FDCliente {self.pallet_id.customer_code or ''} Fecha {self.pallet_id.date_packing.strftime('%d/%m/%Y') if self.pallet_id.date_packing else ''} Mill {self.mill_roll} Maq {self.pallet_id.machine}^FS
+^FO10,70^FDPedido {self.pallet_id.sale_order_id.name if self.pallet_id.sale_order_id else ''} Destiny {self.customer_item_no or ''} Neto {self.peso_neto} Box #{self.sequence} TARA {self.tara}^FS
+^FO10,100^FDLOTE/PALLET {self.pallet_id.name}^FS
+^BY3,2,70^FO10,150^BCN,70,Y,N,A^FD{self.name}^FS
+^FO10,230^FD{self.name}^FS
+^XZ""".strip()
