@@ -24,7 +24,7 @@ class StockMoveLine(models.Model):
             lot_name = line.lot_name or ''
             qty = line.quantity or 0.0
             # Estructura requerida: CódigoArticulo|Lote|Cantidad
-            line.x_qr_content = f"{product_code}|{lot_name}|{qty:.2f}"
+            line.x_qr_content = f"{product_code}/{lot_name}/{qty:.2f}"
 
     @api.onchange('quantity')
     def _onchange_quantity_validate(self):
