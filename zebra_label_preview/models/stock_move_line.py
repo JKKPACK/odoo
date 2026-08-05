@@ -1,164 +1,200 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError
-import requests
+
 import base64
+import requests
+
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
+
 
 class StockMoveLine(models.Model):
-    _inherit = 'stock.move.line'
+    _inherit = "stock.move.line"
 
-    # Campos de captura manual en la recepción
+    # ==========================================================
+    # Campos personalizados
+    # ==========================================================
+
     x_calibre = fields.Float(string="Calibre", digits=(16, 2))
     x_ancho = fields.Float(string="Ancho (mm)", digits=(16, 2))
     x_factura_proveedor = fields.Char(string="Factura Proveedor")
     x_rollo_proveedor = fields.Char(string="Rollo Proveedor")
     x_lote_proveedor = fields.Char(string="Lote Proveedor")
-    
-    # Campo computado para la recolección del escáner en inventarios físicos
-    x_qr_content = fields.Char(compute='_compute_qr_content', string="Contenido Código QR")
 
-    @api.depends('product_id', 'lot_id', 'quantity')
+    x_qr_content = fields.Char(
+        compute="_compute_qr_content",
+        string="Contenido Código QR",
+    )
+
+    # ==========================================================
+    # QR
+    # ==========================================================
+
+    @api.depends("product_id", "lot_id", "quantity")
     def _compute_qr_content(self):
         for line in self:
-            product_code = line.product_id.default_code or ''
-            lot_name = line.lot_name or ''
+            product_code = line.product_id.default_code or ""
+            lot_name = line.lot_name or ""
             qty = line.quantity or 0.0
-            # Estructura requerida: CódigoArticulo|Lote|Cantidad
-            line.x_qr_content = f"{product_code}/{lot_name}/{qty:.2f}"
 
-    @api.onchange('quantity')
+            line.x_qr_content = (
+                f"{product_code}|{lot_name}|{qty:.2f}"
+            )
+
+    # ==========================================================
+    # Validaciones
+    # ==========================================================
+
+    @api.onchange("quantity")
     def _onchange_quantity_validate(self):
-        """ Valida en tiempo real que la cantidad total no exceda la demanda """
         for line in self:
-            if line.move_id and line.move_id.product_uom_qty:
-                # Sumar todas las líneas del movimiento incluyendo la actual
-                total_qty = sum(line.move_id.move_line_ids.filtered(lambda l: l.product_id == line.product_id).mapped('quantity'))
-                if total_qty > line.move_id.product_uom_qty:
-                    return {
-                        'warning': {
-                            'title': _('Cantidad total excede la demanda'),
-                            'message': _('La cantidad total (%s) no puede exceder la demanda (%s) para el producto %s') % (
-                                total_qty,
-                                line.move_id.product_uom_qty,
-                                line.product_id.name
-                            )
-                        }
-                    }
+            if not line.move_id:
+                continue
 
-    @api.constrains('quantity')
-    def _check_quantity_not_exceeds_demand(self):
-        """ Valida que la cantidad total no exceda la demanda del movimiento al guardar """
-        for line in self:
-            if line.move_id and line.move_id.product_uom_qty:
-                # Sumar todas las líneas del movimiento para el mismo producto
-                total_qty = sum(line.move_id.move_line_ids.filtered(lambda l: l.product_id == line.product_id).mapped('quantity'))
-                if total_qty > line.move_id.product_uom_qty:
-                    raise UserError(
-                        _("La cantidad total (%s) no puede exceder la demanda (%s) para el producto %s") % (
-                            total_qty,
-                            line.move_id.product_uom_qty,
-                            line.product_id.name
+            demand = line.move_id.product_uom_qty
+
+            total = sum(
+                line.move_id.move_line_ids.filtered(
+                    lambda l: l.product_id == line.product_id
+                ).mapped("quantity")
+            )
+
+            if total > demand:
+                return {
+                    "warning": {
+                        "title": _("Cantidad total excede la demanda"),
+                        "message": _(
+                            "La cantidad total (%s) no puede exceder la demanda (%s) para el producto %s"
                         )
+                        % (
+                            total,
+                            demand,
+                            line.product_id.display_name,
+                        ),
+                    }
+                }
+
+    @api.constrains("quantity")
+    def _check_quantity_not_exceeds_demand(self):
+        for line in self:
+            if not line.move_id:
+                continue
+
+            demand = line.move_id.product_uom_qty
+
+            total = sum(
+                line.move_id.move_line_ids.filtered(
+                    lambda l: l.product_id == line.product_id
+                ).mapped("quantity")
+            )
+
+            if total > demand:
+                raise UserError(
+                    _(
+                        "La cantidad total (%s) no puede exceder la demanda (%s) para el producto %s"
                     )
+                    % (
+                        total,
+                        demand,
+                        line.product_id.display_name,
+                    )
+                )
+
+    # ==========================================================
+    # Utilidades
+    # ==========================================================
+
+    def _render_zpl(self, ids):
+        report = self.env["ir.actions.report"]
+
+        zpl_bytes, report_type = report._render_qweb_text(
+            "zebra_label_preview.action_report_zebra_jkkpack",
+            ids,
+        )
+
+        return (
+            zpl_bytes.decode("utf-8")
+            if isinstance(zpl_bytes, bytes)
+            else zpl_bytes
+        )
+
+    # ==========================================================
+    # Vista previa
+    # ==========================================================
 
     def action_open_label_preview(self):
-        """ Procesa el QWeb en texto ZPL y solicita el render PNG a Labelary PARA TODAS LAS LÍNEAS SELECCIONADAS """
-        if not self:
-            raise UserError(_("Debe seleccionar al menos una línea"))
-        
-        # XML ID de nuestro reporte personalizado
-        report_ref = 'zebra_label_preview.action_report_zebra_jkkpack'
-        
-        # 1. ADAPTADO PARA ODOO 19.0: Renderizar el QWeb a texto para TODAS las líneas
-        # Firma en Odoo 19: _render_qweb_text(report_ref, res_ids)
-        # ✅ Pasar todos los IDs como argumento posicional
-        zpl_content_bytes, report_type = self.env['ir.actions.report']._render_qweb_text(
-            report_ref,
-            self.ids  # ✅ Pasar todos los IDs como argumento posicional
-        )
-        
-        # Asegurar decodificación limpia de los comandos de texto nativos
-        zpl_text = zpl_content_bytes.decode('utf-8') if isinstance(zpl_content_bytes, bytes) else zpl_content_bytes
 
-        # 2. Enviar comandos ZPL a Labelary (Configurado a 300 DPI y lienzo de 4x6 pulgadas)
-        # 300 DPI = 11.81 dpmm (12dpmm en Labelary)
-        # Dimensiones: 1200 dots (ancho) x 1800 dots (alto)
-        url = 'http://api.labelary.com/v1/printers/12dpmm/labels/4x6/0/'
-        headers = {'Accept': 'image/png'}
-        
+        if not self:
+            raise UserError(
+                _("Debe seleccionar al menos una línea.")
+            )
+
+        # ZPL COMPLETO
+        zpl_all = self._render_zpl(self.ids)
+
+        # SOLO PRIMERA ETIQUETA
+        zpl_preview = self._render_zpl([self[0].id])
+
         try:
-            response = requests.post(url, headers=headers, data=zpl_text.encode('utf-8'), timeout=10)
-            if response.status_code == 200:
-                image_base64 = base64.b64encode(response.content).decode('utf-8')
-                
-                # 3. Crear el registro del asistente usando solo campos existentes
-                # Guardar los IDs como un comentario especial al inicio del ZPL
-                zpl_with_ids = f"{{{{IDS:{self.ids}}}}}\n{zpl_text}"
-                
-                wizard = self.env['stock.label.preview.wizard'].create({
-                    'move_line_id': self[0].id if self else False,  # Primera línea para referencia
-                    'preview_image': image_base64,
-                    'zpl_code': zpl_with_ids,
-                })
-                
-                return {
-                    'name': _('Vista Previa de Etiqueta - Zebra ZT411 (%d líneas)') % len(self),
-                    'type': 'ir.actions.act_window',
-                    'res_model': 'stock.label.preview.wizard',
-                    'view_mode': 'form',
-                    'res_id': wizard.id,
-                    'target': 'new',
-                }
-            else:
-                raise UserError(_("Error de Labelary (%s): %s") % (response.status_code, response.text))
-        except requests.exceptions.RequestException as e:
-            raise UserError(_("No se pudo conectar con el servicio de renderizado: %s") % str(e))
+
+            response = requests.post(
+                "http://api.labelary.com/v1/printers/12dpmm/labels/4x6/0/",
+                headers={
+                    "Accept": "image/png",
+                },
+                data=zpl_preview.encode("utf-8"),
+                timeout=10,
+            )
+
+        except requests.exceptions.RequestException as exc:
+            raise UserError(
+                _("No se pudo conectar con Labelary:\n%s")
+                % str(exc)
+            )
+
+        if response.status_code != 200:
+            raise UserError(
+                _("Error de Labelary (%s):\n%s")
+                % (
+                    response.status_code,
+                    response.text,
+                )
+            )
+
+        wizard = self.env[
+            "stock.label.preview.wizard"
+        ].create(
+            {
+                "move_line_id": self[0].id,
+                "preview_image": base64.b64encode(
+                    response.content
+                ).decode(),
+                "zpl_code": zpl_all,
+            }
+        )
+
+        return {
+            "name": _(
+                "Vista previa de etiquetas (%d)"
+            )
+            % len(self),
+            "type": "ir.actions.act_window",
+            "res_model": "stock.label.preview.wizard",
+            "view_mode": "form",
+            "res_id": wizard.id,
+            "target": "new",
+        }
+
+    # ==========================================================
+    # Imprimir
+    # ==========================================================
 
     def action_print_all_labels(self):
-        """ Imprime todas las etiquetas en un único ZPL para impresora Zebra """
-        if not self:
-            raise UserError(_("Debe seleccionar al menos una línea para imprimir"))
-        
-        # XML ID de nuestro reporte personalizado
-        report_ref = 'zebra_label_preview.action_report_zebra_jkkpack'
-        
-        # 1. Renderizar todas las líneas a texto ZPL
-        zpl_content_bytes, report_type = self.env['ir.actions.report']._render_qweb_text(
-            report_ref,
-            self.ids
-        )
-        
-        # Asegurar decodificación limpia de los comandos de texto nativos
-        zpl_text = zpl_content_bytes.decode('utf-8') if isinstance(zpl_content_bytes, bytes) else zpl_content_bytes
+        """
+        Genera el ZPL completo para todas las etiquetas.
 
-        # 2. Enviar comandos ZPL a Labelary para previsualización
-        url = 'http://api.labelary.com/v1/printers/12dpmm/labels/4x6/0/'
-        headers = {'Accept': 'image/png'}
-        
-        try:
-            response = requests.post(url, headers=headers, data=zpl_text.encode('utf-8'), timeout=10)
-            if response.status_code == 200:
-                image_base64 = base64.b64encode(response.content).decode('utf-8')
-                
-                # 3. Crear el registro del asistente y retornar la ventana modal
-                # Guardar los IDs como un comentario especial al inicio del ZPL
-                zpl_with_ids = f"{{{{IDS:{self.ids}}}}}\n{zpl_text}"
-                
-                wizard = self.env['stock.label.preview.wizard'].create({
-                    'move_line_id': self[0].id if len(self) == 1 else False,
-                    'preview_image': image_base64,
-                    'zpl_code': zpl_with_ids,
-                })
-                
-                return {
-                    'name': _('Vista Previa de Etiquetas - Zebra ZT411 (%d líneas)') % len(self),
-                    'type': 'ir.actions.act_window',
-                    'res_model': 'stock.label.preview.wizard',
-                    'view_mode': 'form',
-                    'res_id': wizard.id,
-                    'target': 'new',
-                }
-            else:
-                raise UserError(_("Error de Labelary (%s): %s") % (response.status_code, response.text))
-        except requests.exceptions.RequestException as e:
-            raise UserError(_("No se pudo conectar con el servicio de renderizado: %s") % str(e))
+        La vista previa utiliza únicamente la primera etiqueta,
+        mientras que el wizard almacena el ZPL completo listo para
+        imprimir.
+        """
+
+        return self.action_open_label_preview()
