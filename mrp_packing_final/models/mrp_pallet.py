@@ -1,4 +1,9 @@
-from odoo import models, fields, api
+import base64
+
+import requests
+
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class MrpPallet(models.Model):
@@ -67,9 +72,56 @@ class MrpPallet(models.Model):
             rec.zpl_pallet = rec.generate_pallet_zpl()
 
     def generate_pallet_zpl(self):
+        """Genera una etiqueta master 4x6, compuesta en orientación horizontal."""
         prod_code = self.product_id.default_code or ""
         prod_name = self.product_id.display_name or ""
-        return f"^XA\n^CF0,30\n^FO20,20^FDJkk Pack^FS\n^CF0,20\n^FO20,50^FDPedido/ Order No. {self.sale_order_id.name or ''}   Cod. Producto: {prod_code}   CantX Tarima: {self.total_qty:.2f}^FS\n^FO20,90^FDPedido Cliente: {self.customer_order_ref or ''}   Cajas por Tarima: {self.box_count}   Peso Bruto: {self.total_gross_weight:.2f} KG^FS\n^FO20,130^FDFecha: {self.date_packing.strftime('%d/%m/%Y') if self.date_packing else ''}   Peso Neto: {self.total_net_weight:.2f} KG^FS\n^FO20,170^FD{prod_name[:70]}^FS\n^FO20,200^FD{self.customer_name or ''} - {self.customer_code or ''}^FS\n^BY3,2,80^FO20,250^BCN,80,Y,N,A^FD{self.name}^FS\n^FO20,350^FD{self.name}^FS\n^XZ"
+        order_no = self.sale_order_id.name or ""
+        customer_order = self.customer_order_ref or ""
+        customer = self.customer_name or ""
+        customer_code = self.customer_code or ""
+        packed_date = (
+            self.date_packing.strftime("%d/%m/%Y") if self.date_packing else ""
+        )
+
+        # 12 dots/mm: 6 pulgadas de ancho x 4 pulgadas de alto.
+        return f"""^XA
+^CI28
+^PW1829
+^LL1219
+^LH0,0
+^CF0,34
+^FO35,32^FDJkk Pack^FS
+^FO35,78^GB1760,2,2^FS
+^CF0,24
+^FO55,110^FDPedido / Order No.^FS
+^A0N,42,42^FO55,145^FD{order_no}^FS
+^CF0,24
+^FO390,110^FDCod. Producto / Product No.^FS
+^A0N,42,42^FO390,145^FD{prod_code}^FS
+^FO870,110^FDCant. X Tarima / Qty Per Pallet^FS
+^A0N,42,42^FO870,145^FD{self.total_qty:.2f}^FS
+^FO1390,110^FDPedido Cliente / Customer PO^FS
+^A0N,42,42^FO1390,145^FD{customer_order}^FS
+^FO35,220^GB1760,2,2^FS
+^CF0,24
+^FO55,255^FDCajas o Rollos por Tarima / Boxes or Rolls per Pallet^FS
+^A0N,44,44^FO55,292^FD{self.box_count}^FS
+^FO390,255^FDPeso Bruto / Gross Weight^FS
+^A0N,44,44^FO390,292^FD{self.total_gross_weight:.2f} KG^FS
+^FO870,255^FDPeso Neto / Net Weight^FS
+^A0N,44,44^FO870,292^FD{self.total_net_weight:.2f} KG^FS
+^FO1390,255^FDFecha / Date^FS
+^A0N,44,44^FO1390,292^FD{packed_date}^FS
+^FO35,370^GB1760,2,2^FS
+^CF0,27
+^FO55,410^FB1680,3,34,L,0^FD{customer} - {customer_code}^FS
+^FO55,540^FB1680,2,34,L,0^FD{prod_name}^FS
+^FO55,660^GB790,2,2^FS
+^FO55,690^FDEtiqueta Master / Master Label^FS
+^BY4,3,190
+^FO70,745^BCN,190,Y,N,N^FD{self.name}^FS
+^FO1110,1030^FDImpreso por SAP^FS
+^XZ"""
 
     def action_print_packing_list(self):
         return self.env.ref(
@@ -84,10 +136,40 @@ class MrpPallet(models.Model):
         }
 
     def action_download_zpl_master(self):
+        self.ensure_one()
+        zpl_code = self.generate_pallet_zpl()
+
+        try:
+            response = requests.post(
+                "https://api.labelary.com/v1/printers/12dpmm/labels/6x4/0/",
+                headers={"Accept": "image/png"},
+                data=zpl_code.encode("utf-8"),
+                timeout=10,
+            )
+        except requests.exceptions.RequestException as exc:
+            raise UserError(
+                _("No se pudo conectar con Labelary:\n%s") % str(exc)
+            ) from exc
+
+        if response.status_code != 200:
+            raise UserError(
+                _("Error de Labelary (%s):\n%s") % (response.status_code, response.text)
+            )
+
+        preview = self.env["pallet.label.preview.wizard"].create(
+            {
+                "pallet_id": self.id,
+                "preview_image": base64.b64encode(response.content),
+                "zpl_code": zpl_code,
+            }
+        )
         return {
-            "type": "ir.actions.act_url",
-            "url": f"/mrp_packing/download_zpl_pallet/{self.id}",
-            "target": "self",
+            "name": _("Vista previa de etiqueta ZPL"),
+            "type": "ir.actions.act_window",
+            "res_model": "pallet.label.preview.wizard",
+            "view_mode": "form",
+            "res_id": preview.id,
+            "target": "new",
         }
 
     def action_print_all_boxes(self):

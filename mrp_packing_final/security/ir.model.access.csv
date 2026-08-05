@@ -4,3 +4,4 @@ access_mrp_box,mrp.box,model_mrp_box,base.group_user,1,1,1,1
 access_pallet_start_wizard,pallet.start.wizard,model_pallet_start_wizard,base.group_user,1,1,1,1
 access_box_entry_wizard,box.entry.wizard,model_box_entry_wizard,base.group_user,1,1,1,1
 access_box_entry_line,box.entry.line,model_box_entry_line,base.group_user,1,1,1,1
+access_pallet_label_preview_wizard,pallet.label.preview.wizard,model_pallet_label_preview_wizard,base.group_user,1,1,1,1
