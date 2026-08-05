@@ -173,11 +173,11 @@ class MrpPallet(models.Model):
         }
 
     def action_print_all_boxes(self):
-        return {
-            "type": "ir.actions.act_url",
-            "url": f"/mrp_packing/print_all_boxes/{self.id}",
-            "target": "new",
-        }
+        self.ensure_one()
+
+        return self.env.ref(
+            "mrp_packing_final.action_report_box_labels_zpl"
+        ).report_action(self.box_ids)
 
     def action_reprint_master_label(self):
         return {

@@ -7,7 +7,7 @@
                 <header>
                     <button name="action_print_packing_list" string="Imprimir Packing List PDF" type="object" class="oe_highlight"/>
                     <button name="action_print_browser_master" string="Vista Previa Master + Imprimir" type="object" class="oe_highlight"/>
-                    <button name="action_download_zpl_master" string="Imprimir ZPL Master" type="object"/>
+                    <button name="action_download_zpl_master" string="Previsualizar ZPL Master" type="object"/>
                     <button name="action_print_all_boxes" string="Imprimir TODAS las Cajas (Navegador)" type="object" class="oe_highlight"/>
                 </header>
                 <sheet>

@@ -46,11 +46,11 @@ class MrpBox(models.Model):
         return f"^XA\n^CF0,20\n^FO10,10^FDO. Fab {self.pallet_id.production_id.name} Prod {prod_code} Rollo {self.master_lot or ''} Op {self.operador or ''}^FS\n^FO10,40^FDCliente {self.pallet_id.customer_code or ''} Fecha {self.pallet_id.date_packing.strftime('%d/%m/%Y') if self.pallet_id.date_packing else ''} Mill {self.mill_roll} Maq {self.pallet_id.machine}^FS\n^FO10,70^FDPedido {self.pallet_id.sale_order_id.name if self.pallet_id.sale_order_id else ''} Destiny {self.customer_item_no or ''} Neto {self.peso_neto} Box #{self.sequence} TARA {self.tara}^FS\n^FO10,100^FDLOTE/PALLET {self.pallet_id.name}^FS\n^BY3,2,70^FO10,150^BCN,70,Y,N,A^FD{self.name}^FS\n^FO10,230^FD{self.name}^FS\n^XZ"
 
     def action_print_browser_box(self):
-        return {
-            "type": "ir.actions.act_url",
-            "url": f"/mrp_packing/print_box/{self.id}",
-            "target": "new",
-        }
+        self.ensure_one()
+
+        return self.env.ref(
+            "mrp_packing_final.action_report_box_labels_zpl"
+        ).report_action(self)
 
     def action_download_zpl_box(self):
         return {

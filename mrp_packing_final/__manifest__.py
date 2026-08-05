@@ -1,6 +1,6 @@
 {
     "name": "MRP Empaquetado Final - Armado de Tarimas",
-    "version": "19.0.1.0.9",
+    "version": "19.0.1.0.8",
     "summary": "Empaquetado post-manufactura: cajas, tarimas, etiquetas ZPL y packing list PDF",
     "category": "Manufacturing",
     "author": "JKK Pack - Custom",
@@ -16,6 +16,7 @@
         "wizards/label_preview_wizard_views.xml",
         "reports/packing_list_report.xml",
         "reports/packing_list_template.xml",
+        "reports/box_labels_zpl.xml",
     ],
     "license": "LGPL-3",
     "installable": True,

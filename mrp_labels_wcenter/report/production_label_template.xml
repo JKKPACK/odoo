@@ -1,123 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_production_label_template">
-        <t t-call="web.html_container">
+        <t t-name="mrp_labels_wcenter.report_production_label_template">
+
             <t t-foreach="docs" t-as="label">
-                <div class="page" style="width: 4in; height: 6in; padding: 5px; font-family: Arial, sans-serif; font-size: 11px; position: relative; page-break-after: always; clear: both;">
-                    <div style="text-align: center; font-weight: bold; font-size: 14px; margin-bottom: 5px;">JKKPack, S.A. DE C.V.</div>
 
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 75%; vertical-align: top; padding-right: 10px;">
-                                <span style="font-size: 10px; color:#555;">Artículo / Item</span>
-                                <br/>
-                                <strong style="font-size: 16px;" t-field="label.product_id.default_code"/>
-                                <br/>
+^XA
+^CI28
+^PW812
+^LL1218
+^LH0,0
 
-                                <div style="margin-top:4px; width: 180px;">
-                                    <div t-out="label.product_id.default_code" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 400, 'height': 40, 'img_style': 'width:180px; height:30px;'}"/>
-                                    <div style="text-align: center; font-size: 8px;" t-field="label.product_id.default_code"/>
-                                </div>
+^FO180,20
+^A0N,40,40
+^FDJKKPack, S.A. DE C.V.^FS
 
-                                <hr style="margin: 6px 0; border-top: 1px solid black; width: 100%;"/>
+^FO30,90
+^A0N,22,22
+^FDArticulo / Item^FS
 
-                                <strong style="font-size: 12px; display: block; min-height: 28px;" t-field="label.product_id.name"/>
-                                <br/>
+^FO30,120
+^A0N,38,38
+^FD<t t-out="label.product_id.default_code or ''"/>
+^FS
 
-                                <span style="font-size: 9px;">Orden Fabricación / Job Order:</span>
-                                <span t-field="label.production_id.name"/>
-                                <br/>
-                                <span style="font-size: 9px;">Calibre / Thickness:</span>
-                                <span>Pendiente</span>
-                                <br/>
-                                <span style="font-size: 9px;">Ancho / Width:</span>
-                                <span>Pendiente</span>
-                                <br/>
+^BY2,3,70
+^FO30,170
+^BCN,70,Y,N,N
+^FD<t t-out="label.product_id.default_code or ''"/>
+^FS
 
-                                <table style="width: 100%; margin-top: 25px;">
-                                    <tr>
-                                        <td style="vertical-align: middle; width: 50%;">
-                                            <span style="font-weight: bold; font-size: 11px;">Cantidad / Quantity:</span>
-                                            <br/>
-                                            <span style="font-size: 22px; font-weight: bold;" t-esc="'%.4f' % label.weight"/>
-                                            <strong>KG</strong>
-                                        </td>
-                                        <td style="vertical-align: middle; width: 50%; text-align: left; padding-top: 5px;">
-                                            <div t-out="'%.4f' % label.weight" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 300, 'height': 40, 'img_style': 'width:110px; height:28px;'}"/>
-                                            <div style="font-size: 8px; text-align: center; width: 110px;" t-esc="'%.4f' % label.weight"/>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
+^FO30,310
+^A0N,30,30
+^FD<t t-out="label.product_id.name or ''"/>
+^FS
 
-                            <td style="width:25%; position:relative; overflow:hidden;">
+^FO30,370
+^A0N,22,22
+^FDOrden Fabricacion:^FS
+^FO250,370
+^A0N,22,22
+^FD<t t-out="label.production_id.name or ''"/>
+^FS
 
-                                <div style="
-        position:absolute;
-        top:145px;
-        right:-70px;
-        width:260px;
-        text-align:center;
-        transform:rotate(-90deg);
-        -webkit-transform:rotate(-90deg);
-    ">
+^FO30,410
+^A0N,22,22
+^FDCalibre:^FS
 
-                                    <div style="
-            font-size:11px;
-            font-weight:bold;
-            margin-bottom:8px;
-        ">
-            Lote / Batch:
-                                        <span t-field="label.name"/>
-                                    </div>
+^FO30,445
+^A0N,22,22
+^FDAncho:^FS
 
-                                    <div t-out="label.name" t-options="{
-                'widget':'barcode',
-                'symbology':'Code128',
-                'width':600,
-                'height':70,
-                'img_style':'width:230px;height:35px;'
-             }"/>
+^FO30,560
+^A0N,28,28
+^FDCantidad / Quantity^FS
 
-                                    <div style="
-            margin-top:4px;
-            font-size:9px;
-            letter-spacing:1px;
-        ">
-                                        <span t-field="label.name"/>
-                                    </div>
+^FO40,600
+^A0N,70,70
+^FD<t t-out="'%.4f' % label.weight"/>
+ KG^FS
 
-                                </div>
+^BY2,3,60
+^FO40,700
+^BCN,60,Y,N,N
+^FD<t t-out="'%.4f' % label.weight"/>
+^FS
 
-                            </td>
-                        </tr>
-                    </table>
+^FO720,180
+^A0R,22,22
+^FDLote / Batch:^FS
 
-                    <div style="position: absolute; bottom: 5px; width: 95%;">
-                        <hr style="margin: 4px 0; border-top: 1px solid black;"/>
-                        <table style="width: 100%;">
-                            <tr>
-                                <td style="width: 30%;">
-                                    <t t-set="qr_data" t-value="(label.product_id.default_code or '') + '|' + (label.name or '') + '|' + str('%.4f' % label.weight)"/>
-                                    <div t-out="qr_data" t-options="{'widget': 'barcode', 'symbology': 'QR', 'width': 150, 'height': 150, 'img_style': 'width: 65px; height: 65px;'}"/>
-                                </td>
-                                <td style="width: 70%; font-size: 9px; vertical-align: middle;">
-                                    <span>OF: <span t-field="label.production_id.name"/>
-                                    </span> | 
-                                    <span>Artículo: <span t-field="label.product_id.default_code"/>
-                                    </span>
-                                    <br/>
-                                    <strong>Lote: <span t-field="label.name"/>
-                                    </strong>
-                                    <br/>
-                                    <span>Fecha: <span t-field="label.date_produced" t-options='{"widget": "datetime", "format": "dd/MM/yyyy HH:mm"}'/>
-                                    </span>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </t>
-        </t>
-    </template>
+^BY2,3,70
+^FO760,260
+^BCR,70,Y,N,N
+^FD<t t-out="label.name"/>
+^FS
+
+^FO690,520
+^A0R,20,20
+^FD<t t-out="label.name"/>
+^FS
+
+^FO30,960
+^BQN,2,6
+^FDLA,<t t-out="(label.product_id.default_code or '') + '|' + (label.name or '') + '|' + ('%.4f' % label.weight)"/>
+^FS
+
+^FO170,960
+^A0N,22,22
+^FDOF: <t t-out="label.production_id.name or ''"/>
+^FS
+
+^FO170,1000
+^A0N,22,22
+^FDArticulo: <t t-out="label.product_id.default_code or ''"/>
+^FS
+
+^FO170,1040
+^A0N,22,22
+^FDLote: <t t-out="label.name"/>
+^FS
+
+^FO170,1080
+^A0N,22,22
+^FDFecha: <t t-out="label.date_produced.strftime('%d/%m/%Y %H:%M') if label.date_produced else ''"/>
+^FS
+
+^XZ
+
+</t>
+
+</t>
+</template>
 </odoo>
