@@ -1,8 +1,45 @@
 <odoo>
   <record id="view_mrp_box_form" model="ir.ui.view">
-    <field name="name">mrp.box.form</field><field name="model">mrp.box</field>
-    <field name="arch" type="xml"><form><header><button name="action_print_browser_box" string="Vista Previa Navegador + Imprimir Caja" type="object" class="oe_highlight"/><button name="action_download_zpl_box" string="Descargar ZPL Caja" type="object"/></header><sheet><group><field name="name" readonly="1"/><field name="pallet_id"/><field name="master_lot"/><field name="sequence"/></group><group><field name="peso_bruto"/><field name="peso_neto"/><field name="tara"/><field name="qty_per_box"/></group><field name="zpl_box" widget="text" readonly="1"/></sheet></form></field></record>
+    <field name="name">mrp.box.form</field>
+    <field name="model">mrp.box</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_print_browser_box" string="Vista Previa Navegador + Imprimir Caja" type="object" class="oe_highlight"/>
+          <button name="action_download_zpl_box" string="Descargar ZPL Caja" type="object"/>
+        </header>
+        <sheet>
+          <group>
+            <field name="name" readonly="1"/>
+            <field name="pallet_id"/>
+            <field name="master_lot"/>
+            <field name="sequence"/>
+          </group>
+          <group>
+            <field name="peso_bruto"/>
+            <field name="peso_neto"/>
+            <field name="tara"/>
+            <field name="qty_per_box"/>
+          </group>
+          <field name="zpl_box" widget="text" readonly="1"/>
+        </sheet>
+      </form>
+    </field>
+  </record>
   <record id="view_mrp_box_list" model="ir.ui.view">
-    <field name="name">mrp.box.list</field><field name="model">mrp.box</field>
-    <field name="arch" type="xml"><list><field name="name"/><field name="pallet_id"/><field name="master_lot"/><field name="peso_bruto"/><field name="peso_neto"/><field name="tara"/><field name="qty_per_box"/><button name="action_print_browser_box" string="Imprimir" type="object" icon="fa-print" class="oe_highlight"/></list></field></record>
+    <field name="name">mrp.box.list</field>
+    <field name="model">mrp.box</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/>
+        <field name="pallet_id"/>
+        <field name="master_lot"/>
+        <field name="peso_bruto"/>
+        <field name="peso_neto"/>
+        <field name="tara"/>
+        <field name="qty_per_box"/>
+        <button name="action_print_browser_box" string="Imprimir" type="object" icon="fa-print" class="oe_highlight"/>
+      </list>
+    </field>
+  </record>
 </odoo>

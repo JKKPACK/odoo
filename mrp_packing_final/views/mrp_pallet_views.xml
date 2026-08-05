@@ -1,3 +1,50 @@
 <odoo>
-<record id="view_mrp_pallet_form" model="ir.ui.view"><field name="name">mrp.pallet.form</field><field name="model">mrp.pallet</field><field name="arch" type="xml"><form><header><button name="action_print_packing_list" string="Imprimir Packing List PDF" type="object" class="oe_highlight"/><button name="action_print_browser_master" string="Vista Previa Master + Imprimir" type="object" class="oe_highlight"/><button name="action_download_zpl_master" string="Descargar ZPL Master" type="object"/><button name="action_print_all_boxes" string="Imprimir TODAS las Cajas (Navegador)" type="object" class="oe_highlight"/></header><sheet><group><field name="name" readonly="1"/><field name="production_id"/><field name="product_id" readonly="1"/><field name="sale_order_id" readonly="1"/><field name="operator"/><field name="machine"/><field name="date_packing"/></group><group string="Totales Calculados"><field name="box_count" readonly="1"/><field name="total_gross_weight" readonly="1"/><field name="total_net_weight" readonly="1"/><field name="total_qty" readonly="1"/><field name="total_tara" readonly="1"/></group><notebook><page string="Cajas"><field name="box_ids"><list editable="bottom"><field name="sequence"/><field name="name" readonly="1"/><field name="master_lot"/><field name="peso_bruto"/><field name="peso_neto"/><field name="tara"/><field name="qty_per_box"/><button name="action_print_browser_box" string="Imprimir Caja" type="object" icon="fa-print" class="oe_highlight"/></list></field></page></notebook></sheet></form></field></record>
+    <record id="view_mrp_pallet_form" model="ir.ui.view">
+        <field name="name">mrp.pallet.form</field>
+        <field name="model">mrp.pallet</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_print_packing_list" string="Imprimir Packing List PDF" type="object" class="oe_highlight"/>
+                    <button name="action_print_browser_master" string="Vista Previa Master + Imprimir" type="object" class="oe_highlight"/>
+                    <button name="action_download_zpl_master" string="Descargar ZPL Master" type="object"/>
+                    <button name="action_print_all_boxes" string="Imprimir TODAS las Cajas (Navegador)" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="production_id"/>
+                        <field name="product_id" readonly="1"/>
+                        <field name="sale_order_id" readonly="1"/>
+                        <field name="operator_id"/>
+                        <field name="machine"/>
+                        <field name="date_packing"/>
+                    </group>
+                    <group string="Totales Calculados">
+                        <field name="box_count" readonly="1"/>
+                        <field name="total_gross_weight" readonly="1"/>
+                        <field name="total_net_weight" readonly="1"/>
+                        <field name="total_qty" readonly="1"/>
+                        <field name="total_tara" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Cajas">
+                            <field name="box_ids">
+                                <list editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="name" readonly="1"/>
+                                    <field name="master_lot"/>
+                                    <field name="peso_bruto"/>
+                                    <field name="peso_neto"/>
+                                    <field name="tara"/>
+                                    <field name="qty_per_box"/>
+                                    <button name="action_print_browser_box" string="Imprimir Caja" type="object" icon="fa-print" class="oe_highlight"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
 </odoo>
