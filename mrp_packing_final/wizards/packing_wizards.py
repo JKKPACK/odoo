@@ -57,11 +57,50 @@ class BoxEntryWizard(models.TransientModel):
     _description = "Captura Manual de Pesos por Caja"
     pallet_id = fields.Many2one("mrp.pallet", required=True)
     production_id = fields.Many2one("mrp.production")
+    production_lot_ids = fields.Many2many(
+        "stock.lot", compute="_compute_production_lots", string="Lotes de producción"
+    )
+    lot_ids_empacados = fields.Many2many(
+        "stock.lot", compute="_compute_lotes_disponibles", string="Lotes ya empacados"
+    )
+    lot_ids_disponibles = fields.Many2many(
+        "stock.lot", compute="_compute_lotes_disponibles", string="Lotes disponibles"
+    )
     line_ids = fields.One2many("box.entry.line", "wizard_id", string="Cajas")
     total_gross = fields.Float(compute="_compute_totals")
     total_net = fields.Float(compute="_compute_totals")
     total_qty = fields.Float(compute="_compute_totals")
     tara = fields.Float(string="TARA")
+
+    @api.depends("production_id", "production_id.lot_distribution_id.line_ids.lot_id")
+    def _compute_production_lots(self):
+        for wizard in self:
+            wizard.production_lot_ids = (
+                wizard.production_id.lot_distribution_id.line_ids.mapped("lot_id")
+            )
+
+    @api.depends("production_id", "production_id.lot_distribution_id.line_ids.lot_id")
+    def _compute_lotes_disponibles(self):
+        for wizard in self:
+            lotes_produccion = wizard.production_lot_ids
+            cajas = self.env["mrp.box"].search(
+                [
+                    ("production_id", "=", wizard.production_id.id),
+                    ("master_lot", "!=", False),
+                ]
+            )
+            nombres_empacados = set()
+            for caja in cajas:
+                nombres_empacados.update(
+                    nombre.strip()
+                    for nombre in caja.master_lot.split(",")
+                    if nombre.strip()
+                )
+            empacados = lotes_produccion.filtered(
+                lambda lote: lote.name in nombres_empacados
+            )
+            wizard.lot_ids_empacados = empacados
+            wizard.lot_ids_disponibles = lotes_produccion - empacados
 
     @api.onchange("tara")
     def _onchange_tara(self):
@@ -82,11 +121,29 @@ class BoxEntryWizard(models.TransientModel):
         for line in self.line_ids:
             if not line.peso_bruto or not line.peso_neto:
                 raise ValidationError(f"Falta peso en caja {line.sequence}")
+            usados = self.line_ids.filtered(lambda other: other != line).mapped(
+                "master_lot"
+            )
+            repetidos = line.master_lot & usados
+            if repetidos:
+                raise ValidationError(
+                    "El lote %s ya fue seleccionado en otra caja."
+                    % ", ".join(repetidos.mapped("name"))
+                )
+            if not line.master_lot:
+                raise ValidationError("Debe seleccionar al menos un lote en cada caja.")
+            lotes_empacados = self.lot_ids_empacados
+            lotes_no_disponibles = line.master_lot & lotes_empacados
+            if lotes_no_disponibles:
+                raise ValidationError(
+                    "Estos lotes ya fueron empacados en otra tarima: %s."
+                    % ", ".join(lotes_no_disponibles.mapped("name"))
+                )
             self.env["mrp.box"].create(
                 {
                     "pallet_id": self.pallet_id.id,
                     "sequence": line.sequence,
-                    "master_lot": line.master_lot,
+                    "master_lot": ", ".join(line.master_lot.mapped("name")),
                     "peso_bruto": line.peso_bruto,
                     "peso_neto": line.peso_neto,
                     "tara": line.tara,
@@ -109,7 +166,23 @@ class BoxEntryLine(models.TransientModel):
     _description = "Linea Captura Caja"
     wizard_id = fields.Many2one("box.entry.wizard", ondelete="cascade")
     sequence = fields.Integer(string="#")
-    master_lot = fields.Char(string="Lote Maestro / Master Lot")
+    production_id = fields.Many2one(related="wizard_id.production_id", readonly=True)
+    production_lot_ids = fields.Many2many(
+        related="wizard_id.production_lot_ids", readonly=True
+    )
+    lot_ids_disponibles = fields.Many2many(
+        related="wizard_id.lot_ids_disponibles", readonly=True
+    )
+    master_lot = fields.Many2many(
+        "stock.lot",
+        string="Lote maestro",
+        domain="[('id', 'in', lot_ids_disponibles), ('id', 'not in', lot_ids_usados)]",
+    )
+    lot_ids_usados = fields.Many2many(
+        "stock.lot",
+        compute="_compute_lot_ids_usados",
+        string="Lotes usados en otras líneas",
+    )
     peso_bruto = fields.Float(string="Peso Bruto")
     peso_neto = fields.Float(
         string="Peso Neto",
@@ -119,6 +192,53 @@ class BoxEntryLine(models.TransientModel):
     )
     tara = fields.Float(string="TARA", default=0.98)
     qty_per_box = fields.Float(string="Cant x Caja", default=2.0)
+
+    @api.depends("wizard_id.line_ids.master_lot")
+    def _compute_lot_ids_usados(self):
+        for line in self:
+            otras_lineas = line.wizard_id.line_ids - line
+            line.lot_ids_usados = otras_lineas.mapped("master_lot")
+
+    @api.onchange("master_lot", "wizard_id.line_ids.master_lot")
+    def _onchange_master_lot(self):
+        for line in self:
+            otras_lineas = line.wizard_id.line_ids - line
+            usados = otras_lineas.mapped("master_lot")
+            repetidos = line.master_lot & usados
+            if repetidos:
+                line.master_lot = [(3, lote.id) for lote in repetidos]
+                return {
+                    "warning": {
+                        "title": "Lote ya seleccionado",
+                        "message": "El lote %s ya fue seleccionado en otra línea."
+                        % ", ".join(repetidos.mapped("name")),
+                    },
+                    "domain": {
+                        "master_lot": [
+                            ("id", "in", line.production_lot_ids.ids),
+                            ("id", "not in", usados.ids),
+                        ]
+                    },
+                }
+            return {
+                "domain": {
+                    "master_lot": [
+                        ("id", "in", line.production_lot_ids.ids),
+                        ("id", "not in", usados.ids),
+                    ]
+                }
+            }
+
+    @api.constrains("master_lot", "wizard_id.line_ids.master_lot")
+    def _check_lotes_unicos(self):
+        for line in self:
+            otras_lineas = line.wizard_id.line_ids - line
+            repetidos = line.master_lot & otras_lineas.mapped("master_lot")
+            if repetidos:
+                raise ValidationError(
+                    "El lote %s ya fue seleccionado en otra línea."
+                    % ", ".join(repetidos.mapped("name"))
+                )
 
     @api.depends("peso_bruto", "tara")
     def _compute_peso_neto(self):

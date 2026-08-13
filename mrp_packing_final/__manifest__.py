@@ -1,10 +1,10 @@
 {
     "name": "MRP Empaquetado Final - Armado de Tarimas",
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.0.8",
     "summary": "Empaquetado post-manufactura: cajas, tarimas, etiquetas ZPL y packing list PDF",
     "category": "Manufacturing",
-    "author": "JKK Pack - Custom",
-    "depends": ["mrp", "sale", "stock"],
+    "author": "Oscar Morocho<oscar.morocho@gateway-resources.com>",
+    "depends": ["mrp", "sale", "stock", "mrp_multi_lot_distribution"],
     "data": [
         "security/ir.model.access.csv",
         "data/sequence.xml",

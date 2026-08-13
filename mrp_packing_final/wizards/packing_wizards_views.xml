@@ -39,7 +39,9 @@
                     <field name="line_ids" nolabel="1">
                         <list editable="bottom">
                             <field name="sequence"/>
-                            <field name="master_lot" placeholder="BMC00288264"/>
+                            <field name="master_lot" widget="many2many_tags" domain="[('id', 'in', lot_ids_disponibles), ('id', 'not in', lot_ids_usados)]"/>
+                            <field name="lot_ids_disponibles" invisible="1"/>
+                            <field name="lot_ids_usados" invisible="1"/>
                             <field name="peso_bruto" placeholder="14.60"/>
                             <field name="peso_neto" placeholder="13.68"/>
                             <field name="tara"/>

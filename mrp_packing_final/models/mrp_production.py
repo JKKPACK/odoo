@@ -55,7 +55,10 @@ class MrpProduction(models.Model):
             "res_model": "pallet.start.wizard",
             "view_mode": "form",
             "target": "new",
-            "context": {"default_production_id": self.id},
+            "context": {
+                "default_production_id": self.id,
+                "default_num_boxes": len(self.lot_distribution_id.line_ids),
+            },
         }
 
     def action_view_pallets(self):
