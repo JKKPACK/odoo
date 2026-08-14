@@ -32,3 +32,10 @@
 - Eliminado el botón independiente "Vista previa Master".
 - Las etiquetas Caja/Bobina 4x6 se previsualizan individualmente o en lote antes de imprimir.
 - El asistente de previsualización soporta múltiples etiquetas y muestra el ZPL completo.
+
+## 19.0.1.3.5
+- Corrige la compilación SCSS en Odoo 19 eliminando `min()` con unidades incompatibles (`vw` y `px`).
+- Mantiene el modal ZPL ancho usando `width: 94%` y `max-width: 1180px`, compatible con el compilador de assets.
+- Las etiquetas ZPL se muestran una por fila, centradas y sin recorte horizontal cuando los assets cargan correctamente.
+- Se mantienen los botones Kanban identificados como `Cajas 4x6`, `Master 6x4` y `PDF`, todos con icono de impresora.
+- Se eliminan textos internos de "Previsualización" visibles en nombres de campos del asistente.

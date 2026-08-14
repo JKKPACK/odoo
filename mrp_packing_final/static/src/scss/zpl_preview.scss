@@ -55,8 +55,8 @@
 /* Make the preview dialog comfortably wide on desktop screens. */
 @media (min-width: 992px) {
     .modal-dialog:has(.o_mrp_zpl_preview_form) {
-        width: min(94vw, 1180px) !important;
-        max-width: min(94vw, 1180px) !important;
+        width: 94% !important;
+        max-width: 1180px !important;
     }
 }
 

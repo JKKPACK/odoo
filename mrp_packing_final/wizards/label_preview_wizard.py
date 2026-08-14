@@ -4,7 +4,7 @@ from odoo.exceptions import UserError
 
 class PalletLabelPreviewWizard(models.TransientModel):
     _name = "pallet.label.preview.wizard"
-    _description = "Previsualización ZPL"
+    _description = "Etiquetas ZPL"
 
     label_type = fields.Selection(
         [("master", "Master 6x4"), ("box", "Caja/Bobina 4x6")],
@@ -15,7 +15,7 @@ class PalletLabelPreviewWizard(models.TransientModel):
     pallet_id = fields.Many2one("mrp.pallet", string="Tarima", readonly=True)
     box_ids = fields.Many2many("mrp.box", string="Cajas/Bobinas", readonly=True)
     preview_line_ids = fields.One2many(
-        "pallet.label.preview.line", "wizard_id", string="Previsualizaciones", readonly=True
+        "pallet.label.preview.line", "wizard_id", string="Etiquetas", readonly=True
     )
     zpl_code = fields.Text(string="Código ZPL completo", readonly=True)
     label_count = fields.Integer(string="Etiquetas", compute="_compute_label_count")
@@ -42,7 +42,7 @@ class PalletLabelPreviewWizard(models.TransientModel):
 
 class PalletLabelPreviewLine(models.TransientModel):
     _name = "pallet.label.preview.line"
-    _description = "Línea de previsualización ZPL"
+    _description = "Línea de etiqueta ZPL"
     _order = "sequence, id"
 
     wizard_id = fields.Many2one(
@@ -50,5 +50,5 @@ class PalletLabelPreviewLine(models.TransientModel):
     )
     sequence = fields.Integer(default=10)
     name = fields.Char(string="Etiqueta", readonly=True)
-    preview_image = fields.Binary(string="Previsualización", readonly=True)
+    preview_image = fields.Binary(string="Etiqueta", readonly=True)
     zpl_code = fields.Text(string="ZPL", readonly=True)
