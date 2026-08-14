@@ -1,4 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="view_sale_order_form_packing_label" model="ir.ui.view">
+        <field name="name">sale.order.form.packing.label</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='client_order_ref']" position="after">
+                <field name="packing_label_text" placeholder="Texto que aparecerá en etiquetas de empaque"/>
+            </xpath>
+        </field>
+    </record>
+
     <record id="view_mrp_production_form_packing" model="ir.ui.view">
         <field name="name">mrp.production.form.packing</field>
         <field name="model">mrp.production</field>
@@ -8,6 +20,8 @@
                 <field name="customer_code" placeholder="C000206"/>
                 <field name="customer_name" placeholder="DESTINY PACKAGING LLC"/>
                 <field name="customer_order_ref"/>
+                <field name="customer_item_no" placeholder="1525"/>
+                <field name="customer_label_text" placeholder="Texto comercial de la etiqueta"/>
             </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_pallets" type="object" class="oe_stat_button" icon="fa-pallet">
@@ -23,6 +37,7 @@
                         <list>
                             <field name="name"/>
                             <field name="date_packing"/>
+                            <field name="workcenter_id"/>
                             <field name="operator_id"/>
                             <field name="box_count"/>
                             <field name="total_gross_weight"/>

@@ -1,45 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <record id="view_mrp_box_form" model="ir.ui.view">
-    <field name="name">mrp.box.form</field>
-    <field name="model">mrp.box</field>
-    <field name="arch" type="xml">
-      <form>
-        <header>
-          <button name="action_print_browser_box" string="Vista Previa Navegador + Imprimir Caja" type="object" class="oe_highlight"/>
-          <button name="action_download_zpl_box" string="Descargar ZPL Caja" type="object"/>
-        </header>
-        <sheet>
-          <group>
-            <field name="name" readonly="1"/>
-            <field name="pallet_id"/>
-            <field name="master_lot"/>
-            <field name="sequence"/>
-          </group>
-          <group>
-            <field name="peso_bruto"/>
-            <field name="peso_neto"/>
-            <field name="tara"/>
-            <field name="qty_per_box"/>
-          </group>
-          <field name="zpl_box" widget="text" readonly="1"/>
-        </sheet>
-      </form>
-    </field>
-  </record>
-  <record id="view_mrp_box_list" model="ir.ui.view">
-    <field name="name">mrp.box.list</field>
-    <field name="model">mrp.box</field>
-    <field name="arch" type="xml">
-      <list>
-        <field name="name"/>
-        <field name="pallet_id"/>
-        <field name="master_lot"/>
-        <field name="peso_bruto"/>
-        <field name="peso_neto"/>
-        <field name="tara"/>
-        <field name="qty_per_box"/>
-        <button name="action_print_browser_box" string="Imprimir" type="object" icon="fa-print" class="oe_highlight"/>
-      </list>
-    </field>
-  </record>
+    <record id="view_mrp_box_search" model="ir.ui.view">
+        <field name="name">mrp.box.search</field>
+        <field name="model">mrp.box</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Cajas/Bobinas">
+                <field name="name"/>
+                <field name="pallet_id"/>
+                <field name="production_id"/>
+                <field name="lot_id"/>
+                <field name="operator_id"/>
+                <separator/>
+                <filter string="Por tarima" name="group_pallet" context="{'group_by': 'pallet_id'}"/>
+                <filter string="Por OF" name="group_production" context="{'group_by': 'production_id'}"/>
+                <filter string="Por lote" name="group_lot" context="{'group_by': 'lot_id'}"/>
+                <filter string="Por operador" name="group_operator" context="{'group_by': 'operator_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_mrp_box_form" model="ir.ui.view">
+        <field name="name">mrp.box.form</field>
+        <field name="model">mrp.box</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_print_browser_box" string="Etiqueta ZPL" type="object" icon="fa-print" class="oe_highlight" title="Etiqueta ZPL 4x6"/>
+                    <button name="action_download_zpl_box" string="ZPL" type="object" icon="fa-print" title="Archivo ZPL 4x6"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="pallet_id"/>
+                            <field name="production_id" readonly="1"/>
+                            <field name="lot_id"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="operator_id" readonly="1"/>
+                            <field name="peso_bruto"/>
+                            <field name="peso_neto"/>
+                            <field name="tara"/>
+                            <field name="qty_per_box"/>
+                        </group>
+                    </group>
+                    <field name="qr_payload" readonly="1"/>
+                    <field name="zpl_box" widget="text" readonly="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_mrp_box_list" model="ir.ui.view">
+        <field name="name">mrp.box.list</field>
+        <field name="model">mrp.box</field>
+        <field name="arch" type="xml">
+            <list string="Cajas/Bobinas" default_order="pallet_id desc, sequence asc">
+                <field name="pallet_id"/>
+                <field name="sequence"/>
+                <field name="name"/>
+                <field name="production_id" optional="show"/>
+                <field name="lot_id"/>
+                <field name="operator_id" optional="show"/>
+                <field name="peso_bruto" sum="Peso bruto"/>
+                <field name="peso_neto" sum="Peso neto"/>
+                <field name="tara" optional="hide" sum="Tara"/>
+                <field name="qty_per_box" sum="Cantidad"/>
+                <button name="action_print_browser_box" string="ZPL" type="object" icon="fa-print" class="oe_highlight" title="Etiqueta ZPL 4x6"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_mrp_boxes" model="ir.actions.act_window">
+        <field name="name">Cajas / Bobinas</field>
+        <field name="res_model">mrp.box</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_mrp_box_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No hay cajas o bobinas empacadas.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_mrp_boxes"
+              name="Cajas / Bobinas"
+              parent="mrp_packing_final.menu_mrp_packing_root"
+              action="action_mrp_boxes"
+              sequence="20"/>
 </odoo>

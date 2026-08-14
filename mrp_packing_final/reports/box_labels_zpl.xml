@@ -1,53 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
     <template id="report_box_labels_zpl">
-        <t t-name="mrp_packing_final.report_box_labels_zpl">
-            <t t-foreach="docs" t-as="box">
-^XA
-^CI28
-^PW812
-^LL1218
+        <t t-foreach="docs" t-as="box"><t t-raw="box.generate_box_zpl()"/></t>
+    </template>
 
-^FO40,40^A0N,35,35^FD<t t-out="box.pallet_id.sale_order_id.name or ''"/>
-^FS
-
-^FO40,90^A0N,30,30^FD<t t-out="box.pallet_id.product_id.default_code or ''"/>
-^FS
-
-^FO40,140^A0N,30,30^FD<t t-out="box.pallet_id.product_id.display_name or ''"/>
-^FS
-
-^FO40,220^A0N,30,30^FDCAJA:^FS
-^FO180,220^A0N,40,40^FD<t t-out="box.name"/>
-^FS
-
-^FO40,280^A0N,30,30^FDPeso Neto:^FS
-^FO240,280^A0N,40,40^FD<t t-out="'%.2f' % box.peso_neto"/>
- KG^FS
-
-^FO40,340^A0N,30,30^FDPeso Bruto:^FS
-^FO240,340^A0N,40,40^FD<t t-out="'%.2f' % box.peso_bruto"/>
- KG^FS
-
-^BY3
-^FO70,500
-^BCN,120,Y,N,N
-^FD<t t-out="box.name"/>
-^FS
-
-^XZ
-</t>
-</t>
-</template>
-
-<record id="action_report_box_labels_zpl" model="ir.actions.report">
-<field name="name">Box Labels ZPL</field>
-<field name="model">mrp.box</field>
-<field name="report_type">qweb-text</field>
-<field name="report_name">mrp_packing_final.report_box_labels_zpl</field>
-<field name="report_file">mrp_packing_final.report_box_labels_zpl</field>
-<field name="print_report_name">'Boxes'</field>
-</record>
-
+    <record id="action_report_box_labels_zpl" model="ir.actions.report">
+        <field name="name">Etiqueta Caja/Bobina ZPL 4x6</field>
+        <field name="model">mrp.box</field>
+        <field name="report_type">qweb-text</field>
+        <field name="report_name">mrp_packing_final.report_box_labels_zpl</field>
+        <field name="report_file">mrp_packing_final.report_box_labels_zpl</field>
+        <field name="print_report_name">'Caja_%s.zpl' % (object.name)</field>
+        <field name="attachment_use">False</field>
+    </record>
 </odoo>

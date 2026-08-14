@@ -1,35 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_pallet_label_preview_wizard" model="ir.ui.view">
         <field name="name">pallet.label.preview.wizard.form</field>
         <field name="model">pallet.label.preview.wizard</field>
         <field name="arch" type="xml">
-            <form string="Vista Previa de Etiqueta ZPL">
+            <form string="Etiquetas ZPL" create="0" edit="0" class="o_mrp_zpl_preview_form">
                 <sheet>
-                    <div class="row">
-                        <div class="col-7 text-center" style="border-right: 1px solid #dee2e6; padding-right: 20px;">
-                            <h4 class="mb-3" style="color: #4A5568; font-weight: bold;">
-                                Simulación de Impresión (ZT411)
-                            </h4>
-                            <field name="preview_image" widget="image" nolabel="1" class="img-fluid" options="{'size': [420, 630]}" style="border: 1px solid #dee2e6; padding: 8px; background-color: #ffffff;"/>
-                        </div>
+                    <group>
+                        <group>
+                            <field name="label_type"/>
+                            <field name="pallet_id" invisible="not pallet_id" options="{'no_open': True}"/>
+                        </group>
+                        <group>
+                            <field name="label_count"/>
+                            <field name="box_ids" widget="many2many_tags" invisible="not box_ids" options="{'no_open': True}"/>
+                        </group>
+                    </group>
 
-                        <div class="col-5" style="padding-left: 20px;">
-                            <h4 class="mb-3" style="color: #4A5568; font-weight: bold;">
-                                Información del Control
-                            </h4>
-                            <group>
-                                <field name="pallet_id" options="{'no_open': True}"/>
-                            </group>
-                            <notebook>
-                                <page string="Código Fuente ZPL (Nativo)">
-                                    <field name="zpl_code" widget="text" nolabel="1" rows="18" style="font-family: 'Courier New', monospace; font-size: 11px; background-color: #f8f9fa;"/>
-                                </page>
-                            </notebook>
-                        </div>
-                    </div>
+                    <separator string="Vista de etiqueta Zebra"/>
+
+                    <!-- Caja/Bobina 4x6: una etiqueta por fila, completa y centrada. -->
+                    <field name="preview_line_ids" nolabel="1" readonly="1" invisible="label_type != 'box'">
+                        <kanban class="o_mrp_zpl_preview_kanban o_mrp_zpl_preview_box" create="0" delete="0">
+                            <field name="name"/>
+                            <field name="preview_image"/>
+                            <templates>
+                                <t t-name="card">
+                                    <div class="o_mrp_zpl_preview_card p-2 text-center">
+                                        <h5 class="mb-2"><field name="name"/></h5>
+                                        <field name="preview_image" widget="image" class="img-fluid"/>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
+                    </field>
+
+                    <!-- Master 6x4: vista horizontal completa. -->
+                    <field name="preview_line_ids" nolabel="1" readonly="1" invisible="label_type != 'master'">
+                        <kanban class="o_mrp_zpl_preview_kanban o_mrp_zpl_preview_master" create="0" delete="0">
+                            <field name="name"/>
+                            <field name="preview_image"/>
+                            <templates>
+                                <t t-name="card">
+                                    <div class="o_mrp_zpl_preview_card p-2 text-center">
+                                        <h5 class="mb-2"><field name="name"/></h5>
+                                        <field name="preview_image" widget="image" class="img-fluid"/>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
+                    </field>
+
+                    <notebook>
+                        <page string="Código ZPL completo">
+                            <field name="zpl_code" widget="text" nolabel="1" readonly="1"
+                                   style="font-family: monospace; font-size: 11px;"/>
+                        </page>
+                    </notebook>
                 </sheet>
                 <footer>
-                    <button name="action_print_zpl" string="Imprimir en Zebra" type="object" class="btn-primary" icon="fa-print"/>
+                    <button name="action_print_zpl" string="Zebra ZPL" type="object"
+                            class="btn-primary" icon="fa-print" title="Zebra ZPL"/>
                     <button special="cancel" string="Cerrar" class="btn-secondary"/>
                 </footer>
             </form>

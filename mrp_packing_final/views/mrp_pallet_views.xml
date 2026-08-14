@@ -1,23 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Búsqueda de tarimas. En Odoo 19 no usar default_period="today": no es un periodo válido. -->
+    <record id="view_mrp_pallet_search" model="ir.ui.view">
+        <field name="name">mrp.pallet.search</field>
+        <field name="model">mrp.pallet</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Tarimas">
+                <field name="name"/>
+                <field name="production_id"/>
+                <field name="product_id"/>
+                <field name="sale_order_id"/>
+                <field name="workcenter_id"/>
+                <field name="operator_id"/>
+                <filter string="Fecha empaquetado" name="date_packing" date="date_packing"/>
+                <separator/>
+                <filter string="Por OF" name="group_production" context="{'group_by': 'production_id'}"/>
+                <filter string="Por producto" name="group_product" context="{'group_by': 'product_id'}"/>
+                <filter string="Por centro de trabajo" name="group_workcenter" context="{'group_by': 'workcenter_id'}"/>
+                <filter string="Por operador" name="group_operator" context="{'group_by': 'operator_id'}"/>
+                <filter string="Por fecha" name="group_date" context="{'group_by': 'date_packing:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_mrp_pallet_kanban" model="ir.ui.view">
+        <field name="name">mrp.pallet.kanban</field>
+        <field name="model">mrp.pallet</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="name"/>
+                <field name="production_id"/>
+                <field name="product_id"/>
+                <field name="sale_order_id"/>
+                <field name="workcenter_id"/>
+                <field name="operator_id"/>
+                <field name="date_packing"/>
+                <field name="box_count"/>
+                <field name="total_gross_weight"/>
+                <field name="total_net_weight"/>
+                <field name="total_qty"/>
+                <field name="box_lot_summary"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <strong class="fs-4"><field name="name"/></strong>
+                                <div class="text-muted"><field name="production_id"/></div>
+                            </div>
+                            <span class="badge rounded-pill text-bg-primary">
+                                <field name="box_count"/> cajas
+                            </span>
+                        </div>
+
+                        <div class="mb-2">
+                            <div><strong>Producto:</strong> <field name="product_id"/></div>
+                            <div t-if="record.sale_order_id.raw_value"><strong>Pedido:</strong> <field name="sale_order_id"/></div>
+                            <div t-if="record.workcenter_id.raw_value"><strong>Centro:</strong> <field name="workcenter_id"/></div>
+                            <div t-if="record.operator_id.raw_value"><strong>Operador:</strong> <field name="operator_id"/></div>
+                            <div><strong>Fecha:</strong> <field name="date_packing"/></div>
+                        </div>
+
+                        <div class="border-top pt-2 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span><strong>P. Bruto:</strong> <field name="total_gross_weight"/> kg</span>
+                                <span><strong>P. Neto:</strong> <field name="total_net_weight"/> kg</span>
+                            </div>
+                            <div><strong>Cantidad:</strong> <field name="total_qty"/></div>
+                        </div>
+
+                        <div class="border-top pt-2">
+                            <strong>Cajas / Lotes</strong>
+                            <div class="small mt-1" style="white-space: pre-line; max-height: 220px; overflow-y: auto;">
+                                <field name="box_lot_summary"/>
+                            </div>
+                        </div>
+
+                        <footer class="o_mrp_pallet_report_actions mt-3 d-flex gap-2 flex-wrap">
+                            <button type="object" name="action_print_all_boxes"
+                                    class="btn btn-outline-primary btn-sm"
+                                    title="ZPL Cajas/Bobinas 4x6">
+                                <i class="fa fa-print"/>
+                                <span>Cajas 4x6</span>
+                            </button>
+                            <button type="object" name="action_reprint_master_label"
+                                    class="btn btn-outline-primary btn-sm"
+                                    title="ZPL Master 6x4">
+                                <i class="fa fa-print"/>
+                                <span>Master 6x4</span>
+                            </button>
+                            <button type="object" name="action_print_packing_list"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    title="Packing List PDF">
+                                <i class="fa fa-print"/>
+                                <span>PDF</span>
+                            </button>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_mrp_pallet_list" model="ir.ui.view">
+        <field name="name">mrp.pallet.list</field>
+        <field name="model">mrp.pallet</field>
+        <field name="arch" type="xml">
+            <list string="Tarimas Generadas" default_order="date_packing desc">
+                <field name="name"/>
+                <field name="production_id"/>
+                <field name="product_id"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="workcenter_id" optional="show"/>
+                <field name="operator_id" optional="show"/>
+                <field name="date_packing"/>
+                <field name="box_count" sum="Total cajas"/>
+                <field name="total_gross_weight" sum="Peso bruto"/>
+                <field name="total_net_weight" sum="Peso neto"/>
+                <field name="total_qty" sum="Cantidad"/>
+            </list>
+        </field>
+    </record>
+
     <record id="view_mrp_pallet_form" model="ir.ui.view">
         <field name="name">mrp.pallet.form</field>
         <field name="model">mrp.pallet</field>
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_print_packing_list" string="Packing List" type="object" class="oe_highlight"/>
-                    <button name="action_download_zpl_master" string="ZPL Master" type="object"/>
-                    <button name="action_print_all_boxes" string="Cajas" type="object" class="oe_highlight"/>
+                    <button name="action_print_packing_list" string="Packing List" type="object" icon="fa-print" title="Packing List PDF"/>
+                    <button name="action_print_browser_master" string="Master ZPL" type="object" icon="fa-print" class="oe_highlight" title="Master ZPL 6x4"/>
+                    <button name="action_print_all_boxes" string="Cajas/Bobinas ZPL" type="object" icon="fa-print" title="Cajas/Bobinas ZPL 4x6"/>
                 </header>
                 <sheet>
                     <group>
-                        <field name="name" readonly="1"/>
-                        <field name="production_id"/>
-                        <field name="product_id" readonly="1"/>
-                        <field name="sale_order_id" readonly="1"/>
-                        <field name="operator_id"/>
-                        <field name="machine"/>
-                        <field name="date_packing"/>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="production_id"/>
+                            <field name="product_id" readonly="1"/>
+                            <field name="sale_order_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="workcenter_id"/>
+                            <field name="operator_id"/>
+                            <field name="machine"/>
+                            <field name="date_packing"/>
+                        </group>
                     </group>
                     <group string="Totales Calculados">
                         <field name="box_count" readonly="1"/>
@@ -27,23 +154,50 @@
                         <field name="total_tara" readonly="1"/>
                     </group>
                     <notebook>
-                        <page string="Cajas">
+                        <page string="Cajas/Bobinas">
                             <field name="box_ids">
                                 <list editable="bottom">
                                     <field name="sequence"/>
+                                    <field name="lot_id"/>
                                     <field name="name" readonly="1"/>
-                                    <field name="master_lot"/>
                                     <field name="peso_bruto"/>
                                     <field name="peso_neto"/>
                                     <field name="tara"/>
                                     <field name="qty_per_box"/>
-                                    <button name="action_print_browser_box" string="Imprimir Caja" type="object" icon="fa-print" class="oe_highlight"/>
+                                    <button name="action_print_browser_box" string="ZPL" type="object" icon="fa-print" class="oe_highlight" title="Etiqueta ZPL 4x6"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="ZPL Master">
+                            <field name="qr_payload" readonly="1"/>
+                            <field name="zpl_pallet" widget="text" readonly="1"/>
                         </page>
                     </notebook>
                 </sheet>
             </form>
         </field>
     </record>
+
+    <record id="action_mrp_pallets" model="ir.actions.act_window">
+        <field name="name">Tarimas Generadas</field>
+        <field name="res_model">mrp.pallet</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_mrp_pallet_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No hay tarimas generadas.</p>
+            <p>Las tarimas aparecerán aquí cuando se complete el proceso de empaquetado.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_mrp_packing_root"
+              name="Empaquetado"
+              parent="mrp.menu_mrp_root"
+              sequence="65"/>
+
+    <menuitem id="menu_mrp_pallets"
+              name="Tarimas Generadas"
+              parent="menu_mrp_packing_root"
+              action="action_mrp_pallets"
+              sequence="10"/>
 </odoo>

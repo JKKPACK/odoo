@@ -1,15 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="paperformat_packing_list" model="report.paperformat">
+        <field name="name">Packing List A4</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">12</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
     <record id="action_report_packing_list" model="ir.actions.report">
         <field name="name">Lista de Empaque / Packing List</field>
         <field name="model">mrp.pallet</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">mrp_packing_final.report_packing_list</field>
         <field name="report_file">mrp_packing_final.report_packing_list</field>
+        <field name="paperformat_id" ref="mrp_packing_final.paperformat_packing_list"/>
         <field name="print_report_name">'PackingList_%s' % (object.name)</field>
     </record>
 
     <record id="action_report_pallet_zpl" model="ir.actions.report">
-        <field name="name">Etiqueta Master ZPL</field>
+        <field name="name">Etiqueta Master ZPL 6x4</field>
         <field name="model">mrp.pallet</field>
         <field name="report_type">qweb-text</field>
         <field name="report_name">mrp_packing_final.report_pallet_zpl</field>
