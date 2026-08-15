@@ -1,3 +1,12 @@
+
+## 19.0.1.4.1
+- Wizards revisados para cargar automáticamente OF, operador, centro de trabajo, máquina, número de cajas y lotes cuando pueden inferirse.
+- Los lotes de la OF se proponen automáticamente en cada línea de captura, manteniendo la posibilidad de cambiarlos.
+- Campos opcionales/informativos de los asistentes se ocultan cuando no tienen valor; el código ZPL técnico ya no se muestra al operador.
+- `box.entry.wizard` queda preparado también para tarimas manuales: usa lotes del producto cuando no existe OF.
+- Los campos que son obligatorios por lógica de negocio (lote, peso bruto, tara y cantidad) ahora están marcados como requeridos en modelo/vista.
+- Al crear una tarima manual se propone automáticamente el empleado vinculado al usuario actual como operador.
+
 ## 19.0.1.3.2
 - Icono de impresora (`fa-print`) en todos los botones de impresión y ZPL.
 - Se eliminan textos "Previsualizar / Imprimir" de los botones; se usan nombres cortos Master ZPL, Cajas/Bobinas ZPL y ZPL.

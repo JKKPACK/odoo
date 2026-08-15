@@ -19,6 +19,9 @@ class MrpBox(models.Model):
     production_id = fields.Many2one(
         related="pallet_id.production_id", store=True, index=True
     )
+    product_id = fields.Many2one(
+        related="pallet_id.product_id", store=True, index=True, readonly=True
+    )
     name = fields.Char(
         string="ID Caja / Bobina", compute="_compute_name", store=True, index=True
     )
@@ -27,7 +30,8 @@ class MrpBox(models.Model):
         "stock.lot",
         string="Lote Maestro / Master Lot",
         index=True,
-        help="ID/lote de la caja, rollo o bobina. No puede reutilizarse en otra tarima de la misma OF.",
+        domain="[('product_id', '=', product_id)]",
+        help="ID/lote de la caja, rollo o bobina. Solo se permiten lotes del producto de la tarima.",
     )
     master_lot = fields.Char(
         string="Lote Maestro (texto)",
@@ -91,19 +95,28 @@ class MrpBox(models.Model):
         for rec in self:
             rec.zpl_box = rec.generate_box_zpl()
 
-    @api.constrains("lot_id", "production_id")
-    def _check_unique_lot_per_production(self):
+    @api.constrains("lot_id", "production_id", "product_id", "pallet_id")
+    def _check_unique_lot_per_scope(self):
         for rec in self.filtered("lot_id"):
-            duplicate = self.search_count([
-                ("id", "!=", rec.id),
-                ("production_id", "=", rec.production_id.id),
-                ("lot_id", "=", rec.lot_id.id),
-            ])
-            if duplicate:
-                raise ValidationError(
-                    _("El lote %s ya fue empacado en otra caja/bobina de esta orden de fabricación.")
-                    % rec.lot_id.display_name
-                )
+            if rec.lot_id.product_id != rec.product_id:
+                raise ValidationError(_(
+                    "El lote %(lot)s pertenece al producto %(lot_product)s y no al producto de la tarima %(pallet_product)s."
+                ) % {
+                    "lot": rec.lot_id.display_name,
+                    "lot_product": rec.lot_id.product_id.display_name,
+                    "pallet_product": rec.product_id.display_name,
+                })
+
+            domain = [("id", "!=", rec.id), ("lot_id", "=", rec.lot_id.id)]
+            if rec.production_id:
+                domain.append(("production_id", "=", rec.production_id.id))
+                error = _("El lote %s ya fue empacado en otra caja/bobina de esta orden de fabricación.")
+            else:
+                domain += [("product_id", "=", rec.product_id.id)]
+                error = _("El lote %s ya fue empacado en otra tarima de este producto.")
+
+            if self.search_count(domain):
+                raise ValidationError(error % rec.lot_id.display_name)
 
     @api.constrains("peso_bruto", "peso_neto", "tara", "qty_per_box")
     def _check_box_values(self):
@@ -120,6 +133,7 @@ class MrpBox(models.Model):
         self.ensure_one()
         pallet = self.pallet_id
         production = pallet.production_id
+        manufacturing_no = production.name if production else _("MANUAL")
         product_code = zpl_safe(pallet.product_id.default_code)
         lot_code = zpl_safe(self.lot_code)
         operator = zpl_safe(pallet.operator_id.name)
@@ -145,7 +159,7 @@ class MrpBox(models.Model):
 ^FO25,25^GB1150,1745,3^FS
 ^FO45,45^GB1110,115,2^FS
 ^A0N,30,30^FO65,60^FDO. FAB / MFG NO.^FS
-^A0N,45,45^FO65,98^FD{zpl_safe(production.name)}^FS
+^A0N,45,45^FO65,98^FD{zpl_safe(manufacturing_no)}^FS
 ^A0N,30,30^FO575,60^FDCOD. PRODUCTO / PRODUCT NO.^FS
 ^A0N,43,43^FO575,98^FD{product_code}^FS
 

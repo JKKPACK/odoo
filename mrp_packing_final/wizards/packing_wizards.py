@@ -7,7 +7,14 @@ class PalletStartWizard(models.TransientModel):
     _description = "Iniciar Armado de Tarima"
 
     production_id = fields.Many2one("mrp.production", string="Orden de Fabricación", required=True)
-    operator_id = fields.Many2one("hr.employee", string="Operador", required=True)
+    operator_id = fields.Many2one(
+        "hr.employee",
+        string="Operador",
+        required=True,
+        default=lambda self: self.env["hr.employee"].search(
+            [("user_id", "=", self.env.user.id)], limit=1
+        ),
+    )
     workcenter_id = fields.Many2one("mrp.workcenter", string="Centro de Trabajo")
     machine = fields.Char(string="Máquina")
     num_boxes = fields.Integer(
@@ -15,6 +22,59 @@ class PalletStartWizard(models.TransientModel):
     )
     pallet_id = fields.Many2one("mrp.pallet", string="Tarima existente (reimpresión)")
     is_reprint = fields.Boolean(default=False)
+
+    @api.model
+    def default_get(self, fields_list):
+        """Carga automáticamente todo lo inferible desde la OF/tarima/contexto."""
+        values = super().default_get(fields_list)
+        context = self.env.context
+
+        production = self.env["mrp.production"]
+        pallet = self.env["mrp.pallet"]
+
+        pallet_id = values.get("pallet_id") or context.get("default_pallet_id")
+        if pallet_id:
+            pallet = self.env["mrp.pallet"].browse(pallet_id).exists()
+            if pallet:
+                production = pallet.production_id
+                values.setdefault("operator_id", pallet.operator_id.id)
+                values.setdefault("workcenter_id", pallet.workcenter_id.id)
+                values.setdefault("machine", pallet.machine)
+
+        production_id = (
+            values.get("production_id")
+            or context.get("default_production_id")
+            or (context.get("active_id") if context.get("active_model") == "mrp.production" else False)
+        )
+        if production_id and not production:
+            production = self.env["mrp.production"].browse(production_id).exists()
+        if production:
+            values["production_id"] = production.id
+            workcenter = production._packing_workcenter()
+            if workcenter:
+                values.setdefault("workcenter_id", workcenter.id)
+                values.setdefault("machine", workcenter.name)
+            if not context.get("default_num_boxes"):
+                values["num_boxes"] = len(production._available_packing_lots()) or 1
+
+        if not values.get("operator_id"):
+            employee = self.env["hr.employee"].search(
+                [("user_id", "=", self.env.user.id)], limit=1
+            )
+            if employee:
+                values["operator_id"] = employee.id
+
+        return values
+
+    @api.onchange("production_id")
+    def _onchange_production_id(self):
+        if not self.production_id:
+            return
+        workcenter = self.production_id._packing_workcenter()
+        self.workcenter_id = workcenter
+        self.machine = workcenter.name if workcenter else False
+        available_lots = self.production_id._available_packing_lots()
+        self.num_boxes = len(available_lots) or 1
 
     @api.onchange("workcenter_id")
     def _onchange_workcenter_id(self):
@@ -50,12 +110,18 @@ class PalletStartWizard(models.TransientModel):
             "pallet_id": pallet.id,
             "production_id": self.production_id.id,
         })
+        lots_to_pack = available_lots[: self.num_boxes]
         self.env["box.entry.line"].create([
             {
                 "wizard_id": wizard.id,
                 "sequence": i,
+                # El lote es conocido desde la OF: se propone automáticamente y el operador puede cambiarlo.
+                "lot_id": lots_to_pack[i - 1].id if len(lots_to_pack) >= i else False,
                 "qty_per_box": 2.0,
                 "tara": 0.98,
+                # Se envía explícitamente para compatibilidad con BD actualizadas
+                # donde la columna pudo conservar NOT NULL de versiones anteriores.
+                "peso_bruto": 0.0,
             }
             for i in range(1, self.num_boxes + 1)
         ])
@@ -74,7 +140,8 @@ class BoxEntryWizard(models.TransientModel):
     _description = "Captura Manual de Pesos por Caja/Bobina"
 
     pallet_id = fields.Many2one("mrp.pallet", required=True)
-    production_id = fields.Many2one("mrp.production", required=True)
+    production_id = fields.Many2one("mrp.production", string="Orden de Fabricación")
+    product_id = fields.Many2one(related="pallet_id.product_id", string="Producto", readonly=True)
     production_lot_ids = fields.Many2many("stock.lot", compute="_compute_lots", string="Lotes de producción")
     lot_ids_empacados = fields.Many2many("stock.lot", compute="_compute_lots", string="Lotes ya empacados")
     lot_ids_disponibles = fields.Many2many("stock.lot", compute="_compute_lots", string="Lotes disponibles")
@@ -84,25 +151,52 @@ class BoxEntryWizard(models.TransientModel):
     total_qty = fields.Float(compute="_compute_totals")
     tara = fields.Float(string="TARA", default=0.98)
 
-    @api.depends("production_id")
+    @api.model
+    def default_get(self, fields_list):
+        values = super().default_get(fields_list)
+        pallet_id = values.get("pallet_id") or self.env.context.get("default_pallet_id")
+        if pallet_id:
+            pallet = self.env["mrp.pallet"].browse(pallet_id).exists()
+            if pallet:
+                values["pallet_id"] = pallet.id
+                values["production_id"] = pallet.production_id.id or False
+        return values
+
+    @api.depends("production_id", "pallet_id", "pallet_id.product_id", "pallet_id.box_ids.lot_id")
     def _compute_lots(self):
         Box = self.env["mrp.box"]
+        Lot = self.env["stock.lot"]
         for wizard in self:
-            lots = wizard.production_id._packing_lots() if wizard.production_id else self.env["stock.lot"]
-            boxes = Box.search([("production_id", "=", wizard.production_id.id)]) if wizard.production_id else Box
-            used = boxes.filtered("lot_id").mapped("lot_id") if wizard.production_id else self.env["stock.lot"]
             if wizard.production_id:
-                legacy_names = set(
-                    name.strip()
-                    for box in boxes.filtered(lambda b: not b.lot_id and b.master_lot)
-                    for name in box.master_lot.split(",")
-                    if name.strip()
-                )
-                if legacy_names:
-                    used |= lots.filtered(lambda lot: lot.name in legacy_names)
+                lots = wizard.production_id._packing_lots()
+                boxes = Box.search([
+                    ("production_id", "=", wizard.production_id.id),
+                    ("pallet_id", "!=", wizard.pallet_id.id),
+                ])
+            elif wizard.pallet_id and wizard.product_id:
+                lots = Lot.search([("product_id", "=", wizard.product_id.id)])
+                boxes = Box.search([
+                    ("product_id", "=", wizard.product_id.id),
+                    ("pallet_id", "!=", wizard.pallet_id.id),
+                ])
+            else:
+                lots = Lot
+                boxes = Box.browse()
+
+            used = boxes.filtered("lot_id").mapped("lot_id")
+            legacy_names = set(
+                name.strip()
+                for box in boxes.filtered(lambda b: not b.lot_id and b.master_lot)
+                for name in box.master_lot.split(",")
+                if name.strip()
+            )
+            if legacy_names:
+                used |= lots.filtered(lambda lot: lot.name in legacy_names)
+
+            current_lots = wizard.pallet_id.box_ids.mapped("lot_id") if wizard.pallet_id else Lot
             wizard.production_lot_ids = lots
             wizard.lot_ids_empacados = used & lots
-            wizard.lot_ids_disponibles = lots - used
+            wizard.lot_ids_disponibles = (lots - used) | current_lots
 
     @api.onchange("tara")
     def _onchange_tara(self):
@@ -126,17 +220,18 @@ class BoxEntryWizard(models.TransientModel):
         if len(set(selected_lots.ids)) != len(selected_lots):
             raise ValidationError(_("Un lote no puede seleccionarse más de una vez en la misma tarima."))
 
-        already_used = self.env["mrp.box"].search([
-            ("production_id", "=", self.production_id.id),
-            ("lot_id", "in", selected_lots.ids),
-            ("pallet_id", "!=", self.pallet_id.id),
-        ])
-        legacy_boxes = self.env["mrp.box"].search([
-            ("production_id", "=", self.production_id.id),
-            ("lot_id", "=", False),
-            ("master_lot", "!=", False),
-            ("pallet_id", "!=", self.pallet_id.id),
-        ])
+        scope_domain = [("pallet_id", "!=", self.pallet_id.id)]
+        if self.production_id:
+            scope_domain.append(("production_id", "=", self.production_id.id))
+        else:
+            scope_domain.append(("product_id", "=", self.product_id.id))
+
+        already_used = self.env["mrp.box"].search(
+            scope_domain + [("lot_id", "in", selected_lots.ids)]
+        )
+        legacy_boxes = self.env["mrp.box"].search(
+            scope_domain + [("lot_id", "=", False), ("master_lot", "!=", False)]
+        )
         legacy_used_names = set(
             name.strip()
             for box in legacy_boxes
@@ -200,12 +295,13 @@ class BoxEntryLine(models.TransientModel):
     lot_id = fields.Many2one(
         "stock.lot",
         string="Lote Maestro / Master Lot",
+        required=True,
         domain="[('id', 'in', lot_ids_disponibles), ('id', 'not in', lot_ids_usados)]",
     )
-    peso_bruto = fields.Float(string="Peso Bruto")
+    peso_bruto = fields.Float(string="Peso Bruto", default=0.0)
     peso_neto = fields.Float(string="Peso Neto", compute="_compute_peso_neto", store=True, readonly=True)
-    tara = fields.Float(string="TARA", default=0.98)
-    qty_per_box = fields.Float(string="Cant x Caja", default=2.0)
+    tara = fields.Float(string="TARA", default=0.98, required=True)
+    qty_per_box = fields.Float(string="Cant x Caja", default=2.0, required=True)
 
     @api.depends("wizard_id.line_ids.lot_id")
     def _compute_lot_ids_usados(self):

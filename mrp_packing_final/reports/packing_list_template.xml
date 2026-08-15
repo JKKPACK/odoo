@@ -9,7 +9,7 @@
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.basic_layout">
                     <div class="page" style="font-family: Arial, sans-serif; font-size: 9pt; color:#111; margin:0; padding:0;">
-                        <t t-set="company" t-value="o.production_id.company_id"/>
+                        <t t-set="company" t-value="o.production_id.company_id if o.production_id else res_company"/>
 
                         <!-- Encabezado propio: evita la superposición de web.external_layout -->
                         <table style="width:100%; border-collapse:collapse; margin:0 0 5mm 0; table-layout:fixed;">
@@ -87,7 +87,10 @@
                                     </td>
                                     <td style="border:1px solid #aaa; padding:2.5mm; vertical-align:top;">
                                         <div style="font-size:7pt; color:#666; text-transform:uppercase;">Orden de Fabricación / MO</div>
-                                        <div style="font-size:9.5pt; font-weight:700; margin-top:1mm;"><span t-field="o.production_id.name"/></div>
+                                        <div style="font-size:9.5pt; font-weight:700; margin-top:1mm;">
+                                            <t t-if="o.production_id"><span t-field="o.production_id.name"/></t>
+                                            <t t-else="">MANUAL</t>
+                                        </div>
                                     </td>
                                     <td style="border:1px solid #aaa; padding:2.5mm; vertical-align:top;">
                                         <div style="font-size:7pt; color:#666; text-transform:uppercase;">Centro / Work Center</div>

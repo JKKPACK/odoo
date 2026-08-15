@@ -6,18 +6,15 @@
         <field name="arch" type="xml">
             <form string="Etiquetas ZPL" create="0" edit="0" class="o_mrp_zpl_preview_form">
                 <sheet>
-                    <group>
-                        <group>
-                            <field name="label_type"/>
-                            <field name="pallet_id" invisible="not pallet_id" options="{'no_open': True}"/>
-                        </group>
-                        <group>
-                            <field name="label_count"/>
-                            <field name="box_ids" widget="many2many_tags" invisible="not box_ids" options="{'no_open': True}"/>
-                        </group>
-                    </group>
+                    <!-- Metadatos técnicos disponibles para la acción, pero ocultos al operador. -->
+                    <field name="label_type" invisible="1"/>
+                    <field name="pallet_id" invisible="1"/>
+                    <field name="box_ids" invisible="1"/>
+                    <field name="zpl_code" invisible="1"/>
 
-                    <separator string="Vista de etiqueta Zebra"/>
+                    <div class="text-muted mb-2" invisible="label_count &lt;= 1">
+                        <span>Etiquetas: </span><field name="label_count" class="d-inline"/>
+                    </div>
 
                     <!-- Caja/Bobina 4x6: una etiqueta por fila, completa y centrada. -->
                     <field name="preview_line_ids" nolabel="1" readonly="1" invisible="label_type != 'box'">
@@ -50,13 +47,6 @@
                             </templates>
                         </kanban>
                     </field>
-
-                    <notebook>
-                        <page string="Código ZPL completo">
-                            <field name="zpl_code" widget="text" nolabel="1" readonly="1"
-                                   style="font-family: monospace; font-size: 11px;"/>
-                        </page>
-                    </notebook>
                 </sheet>
                 <footer>
                     <button name="action_print_zpl" string="Zebra ZPL" type="object"

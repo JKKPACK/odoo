@@ -21,9 +21,26 @@ class MrpPallet(models.Model):
         index=True,
     )
     production_id = fields.Many2one(
-        "mrp.production", string="Orden de Fabricación", required=True, ondelete="cascade", index=True
+        "mrp.production",
+        string="Orden de Fabricación",
+        required=False,
+        ondelete="set null",
+        index=True,
+        help="Opcional. La tarima también puede crearse manualmente sin una orden de fabricación.",
     )
-    product_id = fields.Many2one(related="production_id.product_id", store=True, readonly=True)
+    product_id = fields.Many2one(
+        "product.product",
+        string="Producto",
+        required=True,
+        index=True,
+        help="Producto contenido en la tarima. En tarimas ligadas a una OF se toma automáticamente de la orden.",
+    )
+    available_lot_ids = fields.Many2many(
+        "stock.lot",
+        compute="_compute_available_lot_ids",
+        string="Lotes disponibles",
+        help="Lotes del producto que todavía pueden seleccionarse en esta tarima manual.",
+    )
     sale_order_id = fields.Many2one(related="production_id.sale_order_id", store=True)
     workcenter_id = fields.Many2one("mrp.workcenter", string="Centro de Trabajo")
     operator_id = fields.Many2one("hr.employee", string="Operador", index=True)
@@ -43,6 +60,88 @@ class MrpPallet(models.Model):
     qr_payload = fields.Char(compute="_compute_qr_payload", string="Contenido QR Master")
     zpl_pallet = fields.Text(string="ZPL Master Tarima", compute="_compute_zpl")
 
+    @api.model
+    def default_get(self, fields_list):
+        values = super().default_get(fields_list)
+        if "operator_id" in fields_list and not values.get("operator_id"):
+            employee = self.env["hr.employee"].search(
+                [("user_id", "=", self.env.user.id)], limit=1
+            )
+            if employee:
+                values["operator_id"] = employee.id
+        return values
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            production_id = vals.get("production_id")
+            if production_id and not vals.get("product_id"):
+                production = self.env["mrp.production"].browse(production_id)
+                vals["product_id"] = production.product_id.id
+        return super().create(vals_list)
+
+    @api.onchange("production_id")
+    def _onchange_production_id(self):
+        if self.production_id:
+            self.product_id = self.production_id.product_id
+            if not self.operator_id:
+                self.operator_id = self.env["hr.employee"].search(
+                    [("user_id", "=", self.env.user.id)], limit=1
+                )
+            if not self.workcenter_id:
+                workcenter = self.production_id._packing_workcenter()
+                self.workcenter_id = workcenter
+                self.machine = workcenter.name if workcenter else self.machine
+
+    @api.constrains("production_id", "product_id")
+    def _check_production_product(self):
+        for rec in self:
+            if rec.production_id and rec.product_id != rec.production_id.product_id:
+                raise ValidationError(_(
+                    "El producto de la tarima debe coincidir con el producto de la orden de fabricación."
+                ))
+
+    @api.constrains("product_id", "box_ids")
+    def _check_box_lot_products(self):
+        for rec in self:
+            invalid = rec.box_ids.filtered(
+                lambda box: box.lot_id and box.lot_id.product_id != rec.product_id
+            )
+            if invalid:
+                raise ValidationError(_(
+                    "Todos los lotes de la tarima deben pertenecer al producto %s."
+                ) % rec.product_id.display_name)
+
+    @api.depends("product_id", "production_id", "box_ids.lot_id")
+    def _compute_available_lot_ids(self):
+        Lot = self.env["stock.lot"]
+        Box = self.env["mrp.box"]
+        for rec in self:
+            if not rec.product_id:
+                rec.available_lot_ids = Lot
+                continue
+
+            if rec.production_id:
+                # Para una tarima de producción se conserva la lógica de lotes de la OF.
+                lots = rec.production_id._packing_lots()
+                used_boxes = Box.search([
+                    ("production_id", "=", rec.production_id.id),
+                    ("pallet_id", "!=", rec.id),
+                    ("lot_id", "!=", False),
+                ])
+            else:
+                # Tarima manual: todos los lotes pertenecientes al producto seleccionado.
+                lots = Lot.search([("product_id", "=", rec.product_id.id)])
+                used_boxes = Box.search([
+                    ("pallet_id.product_id", "=", rec.product_id.id),
+                    ("pallet_id", "!=", rec.id),
+                    ("lot_id", "!=", False),
+                ])
+
+            used_lots = used_boxes.mapped("lot_id")
+            # Los lotes ya presentes en la tarima actual deben seguir visibles al editarla.
+            rec.available_lot_ids = (lots - used_lots) | rec.box_ids.mapped("lot_id")
+
     @api.depends("box_ids", "box_ids.peso_bruto", "box_ids.peso_neto", "box_ids.qty_per_box", "box_ids.tara")
     def _compute_totals(self):
         for rec in self:
@@ -58,7 +157,7 @@ class MrpPallet(models.Model):
             rec.qr_payload = f"{rec.product_id.default_code or ''}/{rec.name or ''}/{qty_text(rec.total_qty)}"
 
     @api.depends(
-        "name", "product_id.default_code", "product_id.name", "sale_order_id.name",
+        "name", "production_id.name", "product_id.default_code", "product_id.name", "sale_order_id.name",
         "customer_order_ref", "customer_name", "customer_code", "customer_label_text",
         "date_packing", "box_count", "total_gross_weight", "total_net_weight", "total_qty",
     )
@@ -77,7 +176,7 @@ class MrpPallet(models.Model):
         """Etiqueta Master 6x4 pulgadas, horizontal, 300 dpi (12 dpmm)."""
         self.ensure_one()
         product_code = zpl_safe(self.product_id.default_code)
-        order_no = zpl_safe(self.sale_order_id.name)
+        order_no = zpl_safe(self.sale_order_id.name or self.production_id.name or _("MANUAL"))
         customer_order = zpl_safe(self.customer_order_ref)
         label_text = zpl_safe(self.customer_label_text or self.product_id.display_name)
         packed_date = self.date_packing.strftime("%d/%m/%Y") if self.date_packing else ""
