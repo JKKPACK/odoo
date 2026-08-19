@@ -140,6 +140,7 @@ class MrpBox(models.Model):
         customer_code = zpl_safe(pallet.customer_code)
         customer_item = zpl_safe(self.customer_item_no)
         sale_order = zpl_safe(pallet.sale_order_id.name)
+        customer_order = zpl_safe(pallet.customer_order_ref)
         label_text = zpl_safe(pallet.customer_label_text or pallet.product_id.display_name)
         machine = zpl_safe(pallet.machine)
         date_text = pallet.date_packing.strftime("%d/%m/%Y") if pallet.date_packing else ""
@@ -178,10 +179,12 @@ class MrpBox(models.Model):
 ^A0N,34,34^FO65,465^FD{operator}^FS
 ^A0N,25,25^FO600,430^FDMáquina / Machine^FS
 ^A0N,34,34^FO600,465^FD{machine}^FS
-^A0N,25,25^FO65,535^FDPedido JkkPack^FS
-^A0N,34,34^FO65,570^FD{sale_order}^FS
-^A0N,25,25^FO600,535^FDMill / Roll^FS
-^A0N,34,34^FO600,570^FD{mill}^FS
+^A0N,23,23^FO65,525^FDPedido JkkPack / Sales Order^FS
+^A0N,31,31^FO65,558^FD{sale_order}^FS
+^A0N,23,23^FO430,525^FDPedido Cliente / Customer Order^FS
+^A0N,31,31^FO430,558^FB430,1,34,L,0^FD{customer_order}^FS
+^A0N,23,23^FO900,525^FDQty^FS
+^A0N,31,31^FO900,558^FD{mill}^FS
 
 ^FO45,635^GB1110,250,2^FS
 ^A0N,26,26^FO65,655^FDDestiny / Customer Item #^FS
@@ -192,7 +195,7 @@ class MrpBox(models.Model):
 ^A0N,42,42^FO600,792^FD{self.peso_neto:.2f} KG^FS
 
 ^FO45,905^GB1110,205,2^FS
-^A0N,27,27^FO65,925^FDDescripción / Description^FS
+^A0N,27,27^FO65,925^FDLeyenda Cliente / Customer Label Text^FS
 ^A0N,34,34^FO65,965^FB1060,3,40,L,0^FD{label_text}^FS
 
 ^A0N,24,24^FO65,1135^FDCustomer Item #^FS
@@ -206,7 +209,6 @@ class MrpBox(models.Model):
 ^BY3,2,120
 ^FO65,1410^BCN,120,Y,N,N^FD{lot_code}^FS
 ^FO865,1365^BQN,2,7^FDLA,{qr}^FS
-^A0N,20,20^FO830,1650^FB300,3,24,C,0^FDArticulo/Lote/Cantidad^FS
 ^XZ"""
 
     def action_preview_zpl_boxes(self, pallet=None):

@@ -5,8 +5,14 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='client_order_ref']" position="attributes">
+                <attribute name="string">Pedido Cliente / Customer Order No.</attribute>
+                <attribute name="placeholder">Número de pedido proporcionado por el cliente</attribute>
+            </xpath>
             <xpath expr="//field[@name='client_order_ref']" position="after">
-                <field name="packing_label_text" placeholder="Texto que aparecerá en etiquetas de empaque"/>
+                <field name="packing_label_text"
+                       string="Leyenda Cliente / Customer Label Text"
+                       placeholder="Leyenda o instrucciones que deben aparecer en las etiquetas"/>
             </xpath>
         </field>
     </record>

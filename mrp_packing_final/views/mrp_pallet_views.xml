@@ -140,6 +140,8 @@
                             <field name="product_id" required="1" readonly="production_id" options="{'no_create': True}"/>
                             <field name="available_lot_ids" invisible="1"/>
                             <field name="sale_order_id" readonly="1" invisible="not production_id"/>
+                            <field name="customer_order_ref" readonly="1" invisible="not customer_order_ref"/>
+                            <field name="customer_label_text" readonly="1" invisible="not customer_label_text"/>
                         </group>
                         <group>
                             <field name="workcenter_id" invisible="not production_id and not workcenter_id"/>

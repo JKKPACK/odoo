@@ -29,7 +29,7 @@ class MrpProduction(models.Model):
         store=True,
         readonly=False,
     )
-    customer_label_text = fields.Char(
+    customer_label_text = fields.Text(
         string="Texto cliente para etiqueta",
         compute="_compute_sale_info",
         store=True,
@@ -58,7 +58,7 @@ class MrpProduction(models.Model):
                 rec.sale_order_id = so
                 rec.customer_code = so.partner_id.ref or str(so.partner_id.id)
                 rec.customer_name = so.partner_id.name
-                rec.customer_order_ref = so.client_order_ref or so.name
+                rec.customer_order_ref = so.client_order_ref or False
                 rec.customer_label_text = so.packing_label_text or rec.customer_label_text
             else:
                 rec.sale_order_id = False

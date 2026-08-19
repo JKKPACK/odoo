@@ -1,3 +1,13 @@
+## 19.0.1.5.0
+
+- Corrige la impresión física de la Master 6x4 en Zebra de 4 pulgadas: se imprime sobre media 4x6 con contenido rotado 90°, evitando cortes.
+- Mantiene la vista previa Master en formato 6x4 horizontal.
+- Elimina el texto debajo del QR para evitar superposición.
+- Refuerza Pedido Cliente desde sale.order.client_order_ref.
+- Cambia la leyenda de empaque a texto multilínea y la muestra en Master y Caja/Bobina.
+- La etiqueta de caja incluye también Pedido Cliente.
+- Peso Bruto Master sigue siendo la suma de los pesos brutos de todas las cajas.
+
 
 ## 19.0.1.4.1
 - Wizards revisados para cargar automáticamente OF, operador, centro de trabajo, máquina, número de cajas y lotes cuando pueden inferirse.
