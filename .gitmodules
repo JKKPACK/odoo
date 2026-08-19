@@ -7,3 +7,8 @@
 	path = OCA/report-print-send
 	url = git@github.com:OCA/report-print-send.git
 	branch = 19.0
+
+[submodule "OCA/stock-logistics-workflow"]
+	path = OCA/stock-logistics-workflow
+	url = git@github.com:OCA/stock-logistics-workflow.git
+	branch = 19.0
