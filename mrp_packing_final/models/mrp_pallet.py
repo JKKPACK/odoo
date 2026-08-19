@@ -11,6 +11,7 @@ from .zpl_utils import qty_text, zpl_safe
 class MrpPallet(models.Model):
     _name = "mrp.pallet"
     _description = "Tarima / Pallet - Master"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "create_date desc"
 
     name = fields.Char(
@@ -19,6 +20,7 @@ class MrpPallet(models.Model):
         default=lambda self: self.env["ir.sequence"].next_by_code("mrp.pallet") or "TR/NEW",
         copy=False,
         index=True,
+        tracking=True,
     )
     production_id = fields.Many2one(
         "mrp.production",
@@ -27,12 +29,14 @@ class MrpPallet(models.Model):
         ondelete="set null",
         index=True,
         help="Opcional. La tarima también puede crearse manualmente sin una orden de fabricación.",
+        tracking=True,
     )
     is_grouped_production_packing = fields.Boolean(
         string="Tarima de producción principal + parcialidades",
         default=False,
         copy=False,
         help="Indica que esta tarima reúne lotes de la producción principal y de sus producciones parciales.",
+        tracking=True,
     )
     packing_production_ids = fields.Many2many(
         "mrp.production",
@@ -48,6 +52,7 @@ class MrpPallet(models.Model):
         required=True,
         index=True,
         help="Producto contenido en la tarima. En tarimas ligadas a una OF se toma automáticamente de la orden.",
+        tracking=True,
     )
     available_lot_ids = fields.Many2many(
         "stock.lot",
@@ -56,10 +61,10 @@ class MrpPallet(models.Model):
         help="Lotes del producto que todavía pueden seleccionarse en esta tarima manual.",
     )
     sale_order_id = fields.Many2one(related="production_id.sale_order_id", store=True)
-    workcenter_id = fields.Many2one("mrp.workcenter", string="Centro de Trabajo")
-    operator_id = fields.Many2one("hr.employee", string="Operador", index=True)
-    machine = fields.Char(string="Máquina")
-    date_packing = fields.Datetime(string="Fecha Empaquetado", default=fields.Datetime.now, required=True)
+    workcenter_id = fields.Many2one("mrp.workcenter", string="Centro de Trabajo", tracking=True)
+    operator_id = fields.Many2one("hr.employee", string="Operador", index=True, tracking=True)
+    machine = fields.Char(string="Máquina", tracking=True)
+    date_packing = fields.Datetime(string="Fecha Empaquetado", default=fields.Datetime.now, required=True, tracking=True)
     box_ids = fields.One2many("mrp.box", "pallet_id", string="Cajas/Bobinas")
     box_count = fields.Integer(compute="_compute_totals", store=True)
     box_lot_summary = fields.Text(string="Cajas / Lotes", compute="_compute_box_lot_summary")
