@@ -17,7 +17,15 @@ class MrpBox(models.Model):
         "mrp.pallet", string="Tarima", required=True, ondelete="cascade", index=True
     )
     production_id = fields.Many2one(
-        related="pallet_id.production_id", store=True, index=True
+        related="pallet_id.production_id", store=True, index=True,
+        help="Producción principal asociada a la tarima."
+    )
+    source_production_id = fields.Many2one(
+        "mrp.production",
+        string="Producción origen",
+        index=True,
+        ondelete="set null",
+        help="Producción principal o parcial que generó el lote de esta caja/bobina.",
     )
     product_id = fields.Many2one(
         related="pallet_id.product_id", store=True, index=True, readonly=True
@@ -55,6 +63,14 @@ class MrpBox(models.Model):
     lot_code = fields.Char(compute="_compute_lot_code", string="Código de lote")
     qr_payload = fields.Char(compute="_compute_qr_payload", string="Contenido QR")
     zpl_box = fields.Text(compute="_compute_zpl", string="ZPL Caja/Bobina")
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get("source_production_id") and vals.get("pallet_id"):
+                pallet = self.env["mrp.pallet"].browse(vals["pallet_id"])
+                vals["source_production_id"] = pallet.production_id.id or False
+        return super().create(vals_list)
 
     @api.depends("lot_id.name", "master_lot", "pallet_id.name", "sequence")
     def _compute_name(self):
@@ -95,7 +111,7 @@ class MrpBox(models.Model):
         for rec in self:
             rec.zpl_box = rec.generate_box_zpl()
 
-    @api.constrains("lot_id", "production_id", "product_id", "pallet_id")
+    @api.constrains("lot_id", "source_production_id", "production_id", "product_id", "pallet_id")
     def _check_unique_lot_per_scope(self):
         for rec in self.filtered("lot_id"):
             if rec.lot_id.product_id != rec.product_id:
@@ -108,7 +124,15 @@ class MrpBox(models.Model):
                 })
 
             domain = [("id", "!=", rec.id), ("lot_id", "=", rec.lot_id.id)]
-            if rec.production_id:
+            if rec.source_production_id:
+                domain += [
+                    "|",
+                    ("source_production_id", "=", rec.source_production_id.id),
+                    "&", ("source_production_id", "=", False), ("production_id", "=", rec.source_production_id.id),
+                ]
+                error = _("El lote %s ya fue empacado en otra caja/bobina de esta producción.")
+            elif rec.production_id:
+                # Compatibilidad con registros históricos previos al campo producción origen.
                 domain.append(("production_id", "=", rec.production_id.id))
                 error = _("El lote %s ya fue empacado en otra caja/bobina de esta orden de fabricación.")
             else:
@@ -132,7 +156,7 @@ class MrpBox(models.Model):
         """Etiqueta Caja/Bobina 4x6 pulgadas, vertical, 300 dpi (12 dpmm)."""
         self.ensure_one()
         pallet = self.pallet_id
-        production = pallet.production_id
+        production = self.source_production_id or pallet.production_id
         manufacturing_no = production.name if production else _("MANUAL")
         product_code = zpl_safe(pallet.product_id.default_code)
         lot_code = zpl_safe(self.lot_code)

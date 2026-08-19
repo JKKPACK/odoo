@@ -8,6 +8,7 @@
                 <field name="name"/>
                 <field name="pallet_id"/>
                 <field name="production_id"/>
+                <field name="source_production_id"/>
                 <field name="lot_id"/>
                 <field name="operator_id"/>
                 <separator/>
@@ -34,6 +35,7 @@
                             <field name="name" readonly="1"/>
                             <field name="pallet_id"/>
                             <field name="production_id" readonly="1"/>
+                        <field name="source_production_id" readonly="1" invisible="not source_production_id"/>
                             <field name="lot_id"/>
                             <field name="sequence"/>
                         </group>
@@ -61,6 +63,7 @@
                 <field name="sequence"/>
                 <field name="name"/>
                 <field name="production_id" optional="show"/>
+                <field name="source_production_id" optional="show"/>
                 <field name="lot_id"/>
                 <field name="operator_id" optional="show"/>
                 <field name="peso_bruto" sum="Peso bruto"/>

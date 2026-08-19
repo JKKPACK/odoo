@@ -28,6 +28,20 @@ class MrpPallet(models.Model):
         index=True,
         help="Opcional. La tarima también puede crearse manualmente sin una orden de fabricación.",
     )
+    is_grouped_production_packing = fields.Boolean(
+        string="Tarima de producción principal + parcialidades",
+        default=False,
+        copy=False,
+        help="Indica que esta tarima reúne lotes de la producción principal y de sus producciones parciales.",
+    )
+    packing_production_ids = fields.Many2many(
+        "mrp.production",
+        "mrp_pallet_packing_production_rel",
+        "pallet_id",
+        "production_id",
+        string="Producciones incluidas",
+        copy=False,
+    )
     product_id = fields.Many2one(
         "product.product",
         string="Producto",
@@ -75,9 +89,12 @@ class MrpPallet(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             production_id = vals.get("production_id")
-            if production_id and not vals.get("product_id"):
+            if production_id:
                 production = self.env["mrp.production"].browse(production_id)
-                vals["product_id"] = production.product_id.id
+                if not vals.get("product_id"):
+                    vals["product_id"] = production.product_id.id
+                if not vals.get("packing_production_ids"):
+                    vals["packing_production_ids"] = [(6, 0, [production.id])]
         return super().create(vals_list)
 
     @api.onchange("production_id")
@@ -121,13 +138,27 @@ class MrpPallet(models.Model):
                 rec.available_lot_ids = Lot
                 continue
 
-            if rec.production_id:
-                # Para una tarima de producción se conserva la lógica de lotes de la OF.
-                lots = rec.production_id._packing_lots()
+            if rec.production_id and rec.is_grouped_production_packing:
+                productions = rec.packing_production_ids or rec.production_id._packing_family_productions()
+                lots = Lot.browse()
+                for production in productions:
+                    lots |= production._packing_lots()
                 used_boxes = Box.search([
-                    ("production_id", "=", rec.production_id.id),
                     ("pallet_id", "!=", rec.id),
                     ("lot_id", "!=", False),
+                    "|",
+                    ("source_production_id", "in", productions.ids),
+                    "&", ("source_production_id", "=", False), ("production_id", "in", productions.ids),
+                ])
+            elif rec.production_id:
+                # Flujo individual original: solo lotes de esta OF.
+                lots = rec.production_id._packing_lots()
+                used_boxes = Box.search([
+                    ("pallet_id", "!=", rec.id),
+                    ("lot_id", "!=", False),
+                    "|",
+                    ("source_production_id", "=", rec.production_id.id),
+                    "&", ("source_production_id", "=", False), ("production_id", "=", rec.production_id.id),
                 ])
             else:
                 # Tarima manual: todos los lotes pertenecientes al producto seleccionado.

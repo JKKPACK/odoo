@@ -16,3 +16,7 @@ Versión mejorada conforme al documento **Etiquetado Cajas/Bobinas y Tarima**.
 ## Nota
 
 Todas las etiquetas ZPL (Master 6x4 y Caja/Bobina 4x6) se previsualizan con Labelary antes de imprimir. La salida real se mantiene como ZPL nativo mediante reportes `qweb-text`.
+
+
+### Empaque agrupado de producciones parciales
+Desde la producción principal, el asistente **Iniciar Empaquetado** puede activar **Incluir todas las producciones parciales**. Al hacerlo, la tarima reúne los lotes disponibles de la producción principal y de sus backorders/parcialidades. Cada caja conserva la producción origen de su lote. Si la opción no se activa, el comportamiento individual por OF sigue siendo el mismo.

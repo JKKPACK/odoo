@@ -58,3 +58,11 @@
 - Las etiquetas ZPL se muestran una por fila, centradas y sin recorte horizontal cuando los assets cargan correctamente.
 - Se mantienen los botones Kanban identificados como `Cajas 4x6`, `Master 6x4` y `PDF`, todos con icono de impresora.
 - Se eliminan textos internos de "Previsualización" visibles en nombres de campos del asistente.
+
+## 19.0.1.6.0
+- Nueva opción en **Iniciar Empaquetado** para agrupar la producción principal con todas sus producciones parciales/backorders.
+- La opción solo aparece en la producción principal cuando Odoo detecta más de una producción en el mismo `production_group_id`.
+- La captura carga automáticamente todos los lotes disponibles de la producción principal y sus parcialidades.
+- Cada caja/bobina conserva la **Producción origen** que generó su lote.
+- El flujo individual existente se mantiene sin cambios cuando el check no está activo.
+- Se evita reutilizar lotes ya empacados, incluyendo registros históricos sin `source_production_id`.

@@ -79,7 +79,11 @@ class MrpProduction(models.Model):
     def _available_packing_lots(self):
         self.ensure_one()
         lots = self._packing_lots()
-        boxes = self.env["mrp.box"].search([("production_id", "=", self.id)])
+        boxes = self.env["mrp.box"].search([
+            "|",
+            ("source_production_id", "=", self.id),
+            "&", ("source_production_id", "=", False), ("production_id", "=", self.id),
+        ])
         used = boxes.filtered("lot_id").mapped("lot_id")
         legacy_names = set(
             name.strip()
@@ -90,6 +94,55 @@ class MrpProduction(models.Model):
         if legacy_names:
             used |= lots.filtered(lambda lot: lot.name in legacy_names)
         return lots - used
+
+
+    def _packing_family_productions(self):
+        """Return this MO and its manufacturing backorders/partials.
+
+        Odoo 19 groups manufacturing backorders in ``production_group_id`` and
+        identifies the original MO with ``backorder_sequence == 0``.  We only
+        aggregate productions of the same finished product and company so the
+        normal per-MO packing flow remains untouched.
+        """
+        self.ensure_one()
+        if not self.production_group_id:
+            return self
+        productions = self.production_group_id.production_ids.filtered(
+            lambda mo: mo.product_id == self.product_id and mo.company_id == self.company_id
+        )
+        return productions.sorted(lambda mo: (mo.backorder_sequence, mo.id)) or self
+
+    def _packing_main_production(self):
+        """Return the original/main MO of a manufacturing backorder family.
+
+        In Odoo 19, once an MO is split, the original production no longer keeps
+        ``backorder_sequence == 0``: Odoo changes it to sequence 1 and renames it
+        with the ``-001`` suffix.  Therefore the main production must be resolved
+        as the first production in the group, not by testing sequence == 0.
+        """
+        self.ensure_one()
+        family = self._packing_family_productions()
+        if not family:
+            return self
+        return family.sorted(lambda mo: (mo.backorder_sequence or 0, mo.id))[:1]
+
+    def _is_main_packing_production(self):
+        self.ensure_one()
+        family = self._packing_family_productions()
+        return len(family) > 1 and self == self._packing_main_production()
+
+    def _packing_family_available_lots(self):
+        """Available lots from the original MO plus all of its partial MOs.
+
+        Returns a list of ``(production, lot)`` tuples so each box keeps the
+        exact MO that produced its lot.
+        """
+        self.ensure_one()
+        result = []
+        for production in self._packing_family_productions():
+            for lot in production._available_packing_lots():
+                result.append((production, lot))
+        return result
 
     def _packing_workcenter(self):
         self.ensure_one()
