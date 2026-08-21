@@ -1,57 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!--
+        MASTER 6x4 - ZPL FÍSICO PARA ZEBRA
+        Papel cargado físicamente como 4x6: 1200 x 1800 dots a 300 dpi.
+        Todo el contenido se compone rotado 90 grados para que la etiqueta terminada
+        se lea como 6x4 horizontal. Esta misma plantilla se usa en la vista previa,
+        por lo que Labelary representa exactamente el ZPL enviado a la impresora.
+    -->
     <template id="report_pallet_zpl">
-        <t t-foreach="docs" t-as="doc">^XA
+        <t t-foreach="docs" t-as="doc">
+<t t-set="info_lines" t-value="doc._zpl_wrap_lines(doc.customer_label_text or doc.product_id.display_name, 62, 3)"/>^XA
 ^CI28
-^PW1800
-^LL1200
+^PW1200
+^LL1800
 ^LH0,0
 ^LS0
-^FWN
-^PON
 ^PR3
 ^MD8
-^FO25,25^GB1750,1150,3^FS
-^A0N,32,32^FO55,45^FDETIQUETA MASTER / MASTER PALLET LABEL^FS
-^FO45,90^GB1710,2,2^FS
+^PON
+^FWN
 
-^A0N,27,27^FO60,120^FDPedido / Order No.^FS
-^A0N,46,46^FO60,158^FD<t t-out="doc._zpl_safe(doc.production_id.name if doc.production_id else 'MANUAL')"/>^FS
-^A0N,27,27^FO560,120^FDCod. Producto / Product No.^FS
-^A0N,46,46^FO560,158^FD<t t-out="doc._zpl_safe(doc.product_id.default_code)"/>^FS
-^A0N,27,27^FO1230,120^FDCant X Tarima / Qty Per Pallet^FS
-^A0N,50,50^FO1230,158^FD<t t-out="doc._zpl_qty(doc.total_qty)"/>^FS
-^FO45,235^GB1710,2,2^FS
+^FX ==============================================================
+^FX MASTER 6x4 - PAPEL FISICO 4x6, CONTENIDO ROTADO 90 GRADOS
+^FX La misma plantilla QWeb-text alimenta Labelary y la Zebra.
+^FX ==============================================================
 
-<t t-if="doc.customer_order_ref">^A0N,27,27^FO60,265^FDPedido Cliente / Customer Order No.^FS
-^A0N,40,40^FO60,305^FB500,1,44,L,0^FD<t t-out="doc._zpl_safe(doc.customer_order_ref)"/>^FS
-</t>^A0N,27,27^FO610,265^FDCajas o Rollos por Tarima^FS
-^A0N,26,26^FO610,300^FDBoxes or Rolls per Pallet^FS
-^A0N,50,50^FO610,338^FD<t t-out="doc.box_count"/>^FS
-^A0N,27,27^FO1210,265^FDPeso Bruto / Gross Weight^FS
-^A0N,50,50^FO1210,305^FD<t t-out="'%.2f' % doc.total_gross_weight"/> KG^FS
-^FO45,405^GB1710,2,2^FS
+^FO24,24^GB1152,1752,3^FS
 
-^A0N,25,25^FO60,435^FDFecha / Date^FS
-^A0N,40,40^FO60,475^FD<t t-out="doc._zpl_date(doc.date_packing)"/>^FS
-^A0N,25,25^FO850,435^FDPeso Neto / Net Weight^FS
-^A0N,46,46^FO850,475^FD<t t-out="'%.2f' % doc.total_net_weight"/> KG^FS
-^A0N,25,25^FO1320,435^FDTarima / Pallet ID^FS
-^A0N,43,43^FO1320,475^FD<t t-out="doc._zpl_safe(doc.name)"/>^FS
-^FO45,555^GB1710,2,2^FS
+^FX TITULO
+^FO1040,40^GB2,1720,2^FS
+^A0R,40,40^FO1128,75^FDETIQUETA MASTER / MASTER PALLET LABEL^FS
 
-<t t-if="doc.customer_label_text">^A0N,27,27^FO60,585^FDLeyenda Cliente / Customer Label Text^FS
-^A0N,32,32^FO60,625^FB1660,3,38,L,0^FD<t t-out="doc._zpl_safe(doc.customer_label_text)"/>^FS
+^FX BLOQUE 1: OF | PRODUCTO | CANTIDAD
+^FO875,40^GB2,1720,2^FS
+^FO875,610^GB165,2,2^FS
+^FO875,1285^GB165,2,2^FS
 
-^A0N,25,25^FO80,790^FDTarima / Pallet ID^FS
-^BY3,2,130
-^FO80,830^BCN,130,Y,N,N^FD<t t-out="doc._zpl_safe(doc.name)"/>^FS
-^FO1450,820^BQN,2,6^FDLA,<t t-out="doc._zpl_safe(doc.qr_payload)"/>^FS
-</t><t t-else="">^A0N,25,25^FO80,650^FDTarima / Pallet ID^FS
-^BY3,2,130
-^FO80,690^BCN,130,Y,N,N^FD<t t-out="doc._zpl_safe(doc.name)"/>^FS
-^FO1450,680^BQN,2,6^FDLA,<t t-out="doc._zpl_safe(doc.qr_payload)"/>^FS
-</t>^XZ
+^A0R,23,23^FO1000,70^FDPedido / Order No.^FS
+^A0R,47,47^FO942,70^FD<t t-out="doc._zpl_safe(doc.production_id.name if doc.production_id else 'MANUAL')"/>^FS
+
+^A0R,23,23^FO1000,650^FDCod. Producto / Product No.^FS
+^A0R,42,42^FO944,650^FD<t t-out="doc._zpl_safe(doc.product_id.default_code or '-')"/>^FS
+
+^A0R,21,21^FO1000,1325^FDCant X Tarima / Qty Per Pallet^FS
+^A0R,47,47^FO942,1325^FD<t t-out="doc._zpl_qty(doc.total_qty)"/>^FS
+^A0R,25,25^FO944,1590^FDKG^FS
+
+^FX BLOQUE 2: PEDIDO CLIENTE | CAJAS | PESO BRUTO
+^FO710,40^GB2,1720,2^FS
+^FO710,730^GB165,2,2^FS
+^FO710,1260^GB165,2,2^FS
+
+^A0R,21,21^FO835,70^FDPedido Cliente / Customer Order No.^FS
+^A0R,46,46^FO776,70^FD<t t-out="doc._zpl_safe(doc.customer_order_ref or '-')"/>^FS
+
+^A0R,20,20^FO835,775^FDCajas o Rollos por Tarima^FS
+^A0R,18,18^FO810,775^FDBoxes or Rolls per Pallet^FS
+^A0R,46,46^FO758,775^FD<t t-out="doc.box_count"/>^FS
+
+^A0R,21,21^FO835,1305^FDPeso Bruto / Gross Weight^FS
+^A0R,46,46^FO776,1305^FD<t t-out="'%.2f' % doc.total_gross_weight"/>^FS
+^A0R,25,25^FO778,1610^FDKG^FS
+
+^FX BLOQUE 3: FECHAS | PESO NETO | TARIMA
+^FO545,40^GB2,1720,2^FS
+^FO545,455^GB165,2,2^FS
+^FO545,905^GB165,2,2^FS
+^FO545,1320^GB165,2,2^FS
+
+^A0R,20,20^FO670,70^FDFecha / Date^FS
+^A0R,39,39^FO614,70^FD<t t-out="doc._zpl_date(doc.date_packing)"/>^FS
+
+^A0R,19,19^FO670,495^FDFecha Caducidad / Expiry Date^FS
+^A0R,37,37^FO614,495^FD<t t-out="doc._zpl_date(doc.expiration_date) if doc.expiration_date else '-'"/>^FS
+
+^A0R,20,20^FO670,945^FDPeso Neto / Net Weight^FS
+^A0R,40,40^FO614,945^FD<t t-out="'%.2f' % doc.total_net_weight"/>^FS
+^A0R,23,23^FO616,1195^FDKG^FS
+
+^A0R,20,20^FO670,1360^FDTarima / Pallet ID^FS
+^A0R,37,37^FO614,1360^FD<t t-out="doc._zpl_safe(doc.name)"/>^FS
+
+^FX INFORMACION / DESCRIPCION: LINEAS CONTROLADAS PARA EVITAR SOLAPAMIENTOS
+^FO330,40^GB2,1720,2^FS
+^A0R,21,21^FO505,70^FDInformación / Descripción / Customer Info^FS
+<t t-if="len(info_lines) &gt; 0">^A0R,30,30^FO458,70^FD<t t-out="doc._zpl_safe(info_lines[0])"/>^FS
+</t><t t-if="len(info_lines) &gt; 1">^A0R,30,30^FO416,70^FD<t t-out="doc._zpl_safe(info_lines[1])"/>^FS
+</t><t t-if="len(info_lines) &gt; 2">^A0R,30,30^FO374,70^FD<t t-out="doc._zpl_safe(info_lines[2])"/>^FS
+</t>
+^FX ZONA DE CODIGOS: BARCODE Y QR QUEDAN COMPLETAMENTE DENTRO DE X=24..329
+^FX El separador de informacion esta en X=330 y no atraviesa ningun codigo.
+^A0R,19,19^FO300,70^FDTarima / Pallet ID^FS
+^BY3,2,155
+^FO135,70^BCR,155,Y,N,N^FD<t t-out="doc._zpl_safe(doc.name)"/>^FS
+
+^A0R,17,17^FO55,900^FD<t t-out="doc._zpl_safe(doc.qr_payload)"/>^FS
+^FO58,1375^BQN,2,7^FDLA,<t t-out="doc._zpl_safe(doc.qr_payload)"/>^FS
+^XZ
 </t>
     </template>
 

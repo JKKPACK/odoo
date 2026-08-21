@@ -65,7 +65,10 @@ class MrpBox(models.Model):
     expiration_date_text = fields.Char(
         compute="_compute_expiration_date_text",
         string="Fecha Caducidad",
-        help="Fecha de caducidad tomada del lote cuando el control de expiración está disponible.",
+        help=(
+            "Fecha de caducidad tomada de la producción origen de la caja/bobina. "
+            "Para tarimas manuales, si no existe producción, se intenta tomar del lote."
+        ),
     )
     zpl_box = fields.Text(compute="_compute_zpl", string="ZPL Caja/Bobina")
 
@@ -88,23 +91,37 @@ class MrpBox(models.Model):
         for rec in self:
             rec.lot_code = rec.lot_id.name or rec.master_lot or rec.name or ""
 
-    @api.depends("lot_id", "lot_id.write_date")
+    @api.depends(
+        "source_production_id.expiration_date",
+        "production_id.expiration_date",
+        "lot_id",
+        "lot_id.write_date",
+    )
     def _compute_expiration_date_text(self):
-        """Muestra la fecha de caducidad del lote sin forzar stock_expiration como dependencia.
+        """Fecha de caducidad de la producción que originó la caja/bobina.
 
-        Odoo añade ``expiration_date`` al lote cuando está instalado el control de
-        caducidad. La comprobación dinámica mantiene compatible el módulo en bases
-        donde esa funcionalidad no está habilitada.
+        El flujo productivo ya dispone del campo ``mrp.production.expiration_date``.
+        Para empaquetado agrupado se respeta la producción parcial de origen; para
+        el flujo individual se usa la producción de la tarima. Solo las tarimas
+        manuales, que no tienen producción, conservan el lote como respaldo.
         """
         for rec in self:
-            value = False
-            lot = rec.lot_id
-            if lot:
+            production = rec.source_production_id or rec.production_id
+            value = production.expiration_date if production else False
+
+            # Respaldo exclusivo para tarimas manuales sin una OF asociada.
+            if not value and not production and rec.lot_id:
+                lot = rec.lot_id
                 for field_name in ("expiration_date", "use_date", "life_date"):
                     if field_name in lot._fields and lot[field_name]:
                         value = lot[field_name]
                         break
-            rec.expiration_date_text = value.strftime("%d/%m/%Y") if value and hasattr(value, "strftime") else (str(value) if value else False)
+
+            rec.expiration_date_text = (
+                value.strftime("%d/%m/%Y")
+                if value and hasattr(value, "strftime")
+                else (str(value) if value else False)
+            )
 
     @api.depends("pallet_id.product_id.default_code", "lot_code", "qty_per_box")
     def _compute_qr_payload(self):

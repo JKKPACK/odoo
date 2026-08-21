@@ -12,7 +12,7 @@
 
 ## Master
 - Pedido Cliente, peso bruto acumulado y leyenda de cliente están incluidos.
-- Por requerimiento, la Master NO imprime fecha de caducidad.
+- La Master imprime Fecha de Caducidad tomada de la orden de fabricación (`mrp.production.expiration_date`).
 - Se mantiene 6x4 horizontal (1800x1200, 300 dpi).
 
 ## Impresión / Laminación

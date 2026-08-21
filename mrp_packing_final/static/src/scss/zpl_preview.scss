@@ -46,9 +46,9 @@
     }
 
     .o_mrp_zpl_preview_master .o_field_image img {
-        /* 6x4 landscape: use more horizontal space without overflowing the dialog. */
-        max-width: 820px !important;
-        max-height: 62vh !important;
+        /* Master física: el papel entra 4x6 vertical y el contenido va rotado 90°. */
+        max-width: 560px !important;
+        max-height: 72vh !important;
     }
 }
 

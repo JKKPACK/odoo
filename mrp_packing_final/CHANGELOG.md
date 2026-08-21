@@ -1,3 +1,7 @@
+## 19.0.1.8.7
+- Master ZPL 6x4: vuelve a mostrar Fecha de Caducidad, tomada directamente de `mrp.production.expiration_date`.
+- Master: redistribuida la fila de fecha/caducidad/peso neto/tarima para aprovechar mejor el espacio.
+
 
 ## 19.0.1.7.4
 - Limpieza técnica de código muerto y artefactos generados.
@@ -110,3 +114,17 @@
 - Migra campos de recepción Zebra, vista previa Labelary, impresión masiva y reporte ZPL 4x6 QWeb-text.
 - El reporte Zebra de recepción ahora usa el XML ID `mrp_packing_final.action_report_zebra_jkkpack`.
 - Se conserva el script de validación ZPL en `scripts/validate_zpl_params.py`.
+
+## 19.0.1.8.6
+- Caja/Bobina: la fecha de caducidad se toma primero de la producción origen (`mrp.production.expiration_date`), respetando parcialidades.
+- Tarimas manuales: se conserva como respaldo la fecha disponible en el lote cuando no existe una OF.
+- Master 6x4: redistribución del layout rotado para aprovechar mejor el área física 4x6, aumentar tipografías y reducir espacios en blanco.
+- Master: se mantiene sin fecha de caducidad.
+
+## 19.0.1.9.0
+- Rediseño completo de Master ZPL 6x4 siguiendo el formato visual aprobado.
+- Una única plantilla QWeb-text para vista previa Labelary e impresión Zebra.
+- Papel físico 4x6 (1200x1800 a 300 dpi) con contenido rotado 90°.
+- Rejilla compacta y proporcional: OF, producto, cantidad, pedido cliente, cajas, pesos, fechas y tarima.
+- Bloque de información del cliente con wrapping controlado para evitar textos sobrepuestos.
+- Zona inferior reservada para barcode y QR, sin líneas divisorias que crucen los códigos.

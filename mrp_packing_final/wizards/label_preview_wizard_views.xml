@@ -32,7 +32,7 @@
                         </kanban>
                     </field>
 
-                    <!-- Master 6x4: vista horizontal completa. -->
+                    <!-- Master 6x4: muestra exactamente la orientación física enviada a Zebra. -->
                     <field name="preview_line_ids" nolabel="1" readonly="1" invisible="label_type != 'master'">
                         <kanban class="o_mrp_zpl_preview_kanban o_mrp_zpl_preview_master" create="0" delete="0">
                             <field name="name"/>

@@ -76,6 +76,12 @@ class MrpPallet(models.Model):
     customer_name = fields.Char(related="production_id.customer_name")
     customer_order_ref = fields.Char(related="production_id.customer_order_ref")
     customer_label_text = fields.Text(related="production_id.customer_label_text")
+    expiration_date = fields.Date(
+        related="production_id.expiration_date",
+        string="Fecha de Caducidad",
+        readonly=True,
+        help="Fecha de caducidad tomada de la orden de fabricación principal de la tarima.",
+    )
     qr_payload = fields.Char(compute="_compute_qr_payload", string="Contenido QR Master")
     zpl_pallet = fields.Text(string="ZPL Master Tarima", compute="_compute_zpl")
 
@@ -194,7 +200,7 @@ class MrpPallet(models.Model):
 
     @api.depends(
         "name", "production_id.name", "product_id.default_code", "product_id.name", "sale_order_id.name",
-        "customer_order_ref", "customer_name", "customer_code", "customer_label_text",
+        "customer_order_ref", "customer_name", "customer_code", "customer_label_text", "expiration_date",
         "date_packing", "box_count", "total_gross_weight", "total_net_weight", "total_qty",
     )
     def _compute_zpl(self):
@@ -217,6 +223,30 @@ class MrpPallet(models.Model):
 
     def _zpl_date(self, value):
         return value.strftime("%d/%m/%Y") if value else ""
+
+    def _zpl_wrap_lines(self, value, width=62, max_lines=3):
+        """Divide texto variable en líneas cortas para layouts ZPL rotados.
+
+        El diseño permanece en QWeb-text; este helper únicamente prepara los
+        datos para evitar que una leyenda larga invada otros bloques.
+        """
+        import textwrap
+
+        text = zpl_safe(value)
+        if not text:
+            return []
+        lines = textwrap.wrap(
+            text,
+            width=int(width or 62),
+            break_long_words=True,
+            break_on_hyphens=False,
+        )
+        max_lines = max(int(max_lines or 1), 1)
+        if len(lines) > max_lines:
+            lines = lines[:max_lines]
+            last = lines[-1]
+            lines[-1] = (last[:-3] + "...") if len(last) > 3 else last
+        return lines
 
     def render_pallet_zpl(self):
         """Renderiza la Master desde la plantilla QWeb-text real."""
@@ -251,10 +281,12 @@ class MrpPallet(models.Model):
     def _open_master_zpl_preview(self):
         """Genera la previsualización de la etiqueta Master 6x4 y abre el asistente."""
         self.ensure_one()
+        # La vista previa usa exactamente el mismo ZPL que se envía a la Zebra.
+        # Así Labelary muestra la orientación física 4x6 y el contenido rotado 6x4.
         zpl_code = self.render_pallet_zpl()
         try:
             response = requests.post(
-                "https://api.labelary.com/v1/printers/12dpmm/labels/6x4/0/",
+                "https://api.labelary.com/v1/printers/12dpmm/labels/4x6/0/",
                 headers={"Accept": "image/png"},
                 data=zpl_code.encode("utf-8"),
                 timeout=15,
