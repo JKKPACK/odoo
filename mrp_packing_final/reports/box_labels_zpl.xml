@@ -40,11 +40,11 @@
 </t>
 ^FO45,665^GB1110,2,2^FS
 
-<t t-if="box.thickness_text">^A0N,22,22^FO65,685^FDCalibre / Thickness^FS
-^A0N,31,31^FO65,715^FD<t t-out="box._zpl_safe(box.thickness_text)"/>^FS
-</t><t t-if="box.width_text">^A0N,22,22^FO390,685^FDAncho / Width^FS
-^A0N,31,31^FO390,715^FD<t t-out="box._zpl_safe(box.width_text)"/>^FS
-</t>
+^A0N,22,22^FO65,685^FDCalibre / Thickness^FS
+^A0N,31,31^FO65,715^FD<t t-out="box._zpl_safe(box.thickness_text or '-')"/>^FS
+^A0N,22,22^FO390,685^FDAncho / Width^FS
+^A0N,31,31^FO390,715^FD<t t-out="box._zpl_safe(box.width_text or '-')"/>^FS
+
 ^A0N,22,22^FO690,685^FDCantidad / Quantity^FS
 ^A0N,38,38^FO690,715^FD<t t-out="box._zpl_qty(box.qty_per_box)"/> KG^FS
 ^BY3,2,70
@@ -62,9 +62,9 @@
 
 <t t-if="pallet.operator_id">^A0N,21,21^FO65,925^FDOperador / Operator^FS
 ^A0N,28,28^FO65,955^FD<t t-out="box._zpl_safe(pallet.operator_id.name)"/>^FS
-</t><t t-if="box.operator_number">^A0N,21,21^FO405,925^FDNómina^FS
-^A0N,28,28^FO405,955^FD<t t-out="box._zpl_safe(box.operator_number)"/>^FS
-</t>^A0N,21,21^FO745,925^FDFecha / Date^FS
+</t>^A0N,21,21^FO405,925^FDNómina / Employee No.^FS
+^A0N,28,28^FO405,955^FD<t t-out="box._zpl_safe(box.operator_number or '-')"/>^FS
+^A0N,21,21^FO745,925^FDFecha / Date^FS
 ^A0N,28,28^FO745,955^FD<t t-out="box._zpl_date(pallet.date_packing)"/>^FS
 ^FO45,1010^GB1110,2,2^FS
 
@@ -72,22 +72,31 @@
 <t t-if="box.parent_roll_lots">^A0N,29,29^FO65,1062^FB1060,2,34,L,0^FD<t t-out="box._zpl_safe(box.parent_roll_lots)"/>^FS
 </t><t t-else="">^A0N,29,29^FO65,1062^FD-^FS
 </t>
-^FO45,1145^GB1110,2,2^FS
+^FO45,1135^GB1110,2,2^FS
 
-<t t-if="pallet.customer_order_ref">^A0N,21,21^FO65,1165^FDPedido Cliente / Customer Order^FS
-^A0N,28,28^FO65,1195^FD<t t-out="box._zpl_safe(pallet.customer_order_ref)"/>^FS
-</t><t t-if="box.customer_item_no">^A0N,21,21^FO555,1165^FDCustomer Item #^FS
-^A0N,28,28^FO555,1195^FD<t t-out="box._zpl_safe(box.customer_item_no)"/>^FS
+^A0N,20,20^FO65,1155^FDCliente / Customer^FS
+^A0N,27,27^FO65,1183^FD<t t-out="box._zpl_safe(pallet.customer_name or pallet.customer_code or '-')"/>^FS
+^A0N,20,20^FO430,1155^FDMáquina / Machine^FS
+^A0N,27,27^FO430,1183^FD<t t-out="box._zpl_safe(pallet.machine or box.process_workcenter_name or '-')"/>^FS
+^A0N,20,20^FO800,1155^FDMill / Roll^FS
+^A0N,27,27^FO800,1183^FD<t t-out="box._zpl_qty(box.mill_roll)"/>^FS
+
+^A0N,20,20^FO65,1225^FDPedido JKKPack / Customer Order^FS
+^A0N,27,27^FO65,1253^FD<t t-out="box._zpl_safe(pallet.customer_order_ref or (pallet.sale_order_id.name if pallet.sale_order_id else '-'))"/>^FS
+^A0N,20,20^FO555,1225^FDDestiny / Customer Item #^FS
+^A0N,27,27^FO555,1253^FD<t t-out="box._zpl_safe(box.customer_item_no or '-')"/>^FS
+<t t-if="box.customer_item_no">^BY2,2,55
+^FO820,1218^BCN,55,Y,N,N^FD<t t-out="box._zpl_safe(box.customer_item_no)"/>^FS
 </t>
-<t t-if="pallet.customer_label_text">^A0N,21,21^FO65,1250^FDInformación Cliente / Customer Info^FS
-^A0N,25,25^FO65,1280^FB1060,2,30,L,0^FD<t t-out="box._zpl_safe(pallet.customer_label_text)"/>^FS
+<t t-if="pallet.customer_label_text">^A0N,20,20^FO65,1310^FDInformación Cliente / Customer Info^FS
+^A0N,24,24^FO65,1338^FB1060,2,28,L,0^FD<t t-out="box._zpl_safe(pallet.customer_label_text)"/>^FS
 </t>
 
-^FO45,1480^GB1110,2,2^FS
-^A0N,22,22^FO65,1500^FDLote / Batch^FS
-^BY3,2,105
-^FO65,1530^BCN,105,Y,N,N^FD<t t-out="box._zpl_safe(box.lot_code)"/>^FS
-^FO875,1500^BQN,2,6^FDLA,<t t-out="box._zpl_safe(box.qr_payload)"/>^FS
+^FO45,1425^GB1110,2,2^FS
+^A0N,24,24^FO65,1445^FDLote / Batch^FS
+^BY3,2,110
+^FO65,1480^BCN,110,Y,N,N^FD<t t-out="box._zpl_safe(box.lot_code)"/>^FS
+^FO850,1450^BQN,2,7^FDLA,<t t-out="box._zpl_safe(box.qr_payload)"/>^FS
 ^XZ
 </t>
     </template>

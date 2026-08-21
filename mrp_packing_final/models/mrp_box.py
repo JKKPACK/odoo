@@ -226,15 +226,23 @@ class MrpBox(models.Model):
                 or rec._first_dynamic_value(template, ("material_type", "x_material_type", "tipo_material"))
                 or (product.categ_id.display_name if product and product.categ_id else False)
             )
+            # Calibre/ancho pueden venir de la OF, producto, lote terminado o
+            # de las líneas de movimiento heredadas del etiquetado de recepción.
+            finished_lines = production.move_finished_ids.move_line_ids if production else self.env["stock.move.line"]
+            source_lot = rec.lot_id
             thickness = (
-                rec._first_dynamic_value(production, ("x_calibre", "calibre", "thickness", "x_thickness"))
-                or rec._first_dynamic_value(product, ("x_calibre", "calibre", "thickness", "x_thickness"))
-                or rec._first_dynamic_value(template, ("x_calibre", "calibre", "thickness", "x_thickness"))
+                rec._first_dynamic_value(production, ("x_calibre", "calibre", "thickness", "x_thickness", "x_studio_calibre"))
+                or rec._first_dynamic_value(product, ("x_calibre", "calibre", "thickness", "x_thickness", "x_studio_calibre"))
+                or rec._first_dynamic_value(template, ("x_calibre", "calibre", "thickness", "x_thickness", "x_studio_calibre"))
+                or rec._first_dynamic_value(source_lot, ("x_calibre", "calibre", "thickness", "x_thickness", "x_studio_calibre"))
+                or next((rec._first_dynamic_value(ml, ("x_calibre", "calibre", "thickness", "x_thickness", "x_studio_calibre")) for ml in finished_lines if rec._first_dynamic_value(ml, ("x_calibre", "calibre", "thickness", "x_thickness", "x_studio_calibre"))), False)
             )
             width = (
-                rec._first_dynamic_value(production, ("x_ancho", "ancho", "width", "x_width"))
-                or rec._first_dynamic_value(product, ("x_ancho", "ancho", "width", "x_width"))
-                or rec._first_dynamic_value(template, ("x_ancho", "ancho", "width", "x_width"))
+                rec._first_dynamic_value(production, ("x_ancho", "ancho", "width", "x_width", "x_studio_ancho"))
+                or rec._first_dynamic_value(product, ("x_ancho", "ancho", "width", "x_width", "x_studio_ancho"))
+                or rec._first_dynamic_value(template, ("x_ancho", "ancho", "width", "x_width", "x_studio_ancho"))
+                or rec._first_dynamic_value(source_lot, ("x_ancho", "ancho", "width", "x_width", "x_studio_ancho"))
+                or next((rec._first_dynamic_value(ml, ("x_ancho", "ancho", "width", "x_width", "x_studio_ancho")) for ml in finished_lines if rec._first_dynamic_value(ml, ("x_ancho", "ancho", "width", "x_width", "x_studio_ancho"))), False)
             )
             rec.material_type_text = rec._format_dynamic_value(material)
             rec.thickness_text = rec._format_dynamic_value(thickness)
@@ -242,7 +250,7 @@ class MrpBox(models.Model):
 
             employee = rec.operator_id
             number = rec._first_dynamic_value(
-                employee, ("identification_id", "barcode", "employee_number", "registration_number")
+                employee, ("x_nomina", "nomina", "numero_nomina", "x_numero_nomina", "identification_id", "barcode", "employee_number", "registration_number", "pin")
             )
             rec.operator_number = rec._format_dynamic_value(number)
 
