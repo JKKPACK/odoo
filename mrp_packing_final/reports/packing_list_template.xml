@@ -1,7 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_pallet_zpl">
-        <t t-foreach="docs" t-as="doc"><t t-raw="doc.generate_pallet_zpl()"/></t>
+        <t t-foreach="docs" t-as="doc">^XA
+^CI28
+^PW1800
+^LL1200
+^LH0,0
+^LS0
+^FWN
+^PON
+^PR3
+^MD8
+^FO25,25^GB1750,1150,3^FS
+^A0N,32,32^FO55,45^FDETIQUETA MASTER / MASTER PALLET LABEL^FS
+^FO45,90^GB1710,2,2^FS
+
+^A0N,27,27^FO60,120^FDPedido / Order No.^FS
+^A0N,46,46^FO60,158^FD<t t-out="doc._zpl_safe(doc.production_id.name if doc.production_id else 'MANUAL')"/>^FS
+^A0N,27,27^FO560,120^FDCod. Producto / Product No.^FS
+^A0N,46,46^FO560,158^FD<t t-out="doc._zpl_safe(doc.product_id.default_code)"/>^FS
+^A0N,27,27^FO1230,120^FDCant X Tarima / Qty Per Pallet^FS
+^A0N,50,50^FO1230,158^FD<t t-out="doc._zpl_qty(doc.total_qty)"/>^FS
+^FO45,235^GB1710,2,2^FS
+
+<t t-if="doc.customer_order_ref">^A0N,27,27^FO60,265^FDPedido Cliente / Customer Order No.^FS
+^A0N,40,40^FO60,305^FB500,1,44,L,0^FD<t t-out="doc._zpl_safe(doc.customer_order_ref)"/>^FS
+</t>^A0N,27,27^FO610,265^FDCajas o Rollos por Tarima^FS
+^A0N,26,26^FO610,300^FDBoxes or Rolls per Pallet^FS
+^A0N,50,50^FO610,338^FD<t t-out="doc.box_count"/>^FS
+^A0N,27,27^FO1210,265^FDPeso Bruto / Gross Weight^FS
+^A0N,50,50^FO1210,305^FD<t t-out="'%.2f' % doc.total_gross_weight"/> KG^FS
+^FO45,405^GB1710,2,2^FS
+
+^A0N,25,25^FO60,435^FDFecha / Date^FS
+^A0N,40,40^FO60,475^FD<t t-out="doc._zpl_date(doc.date_packing)"/>^FS
+^A0N,25,25^FO850,435^FDPeso Neto / Net Weight^FS
+^A0N,46,46^FO850,475^FD<t t-out="'%.2f' % doc.total_net_weight"/> KG^FS
+^A0N,25,25^FO1320,435^FDTarima / Pallet ID^FS
+^A0N,43,43^FO1320,475^FD<t t-out="doc._zpl_safe(doc.name)"/>^FS
+^FO45,555^GB1710,2,2^FS
+
+<t t-if="doc.customer_label_text">^A0N,27,27^FO60,585^FDLeyenda Cliente / Customer Label Text^FS
+^A0N,32,32^FO60,625^FB1660,3,38,L,0^FD<t t-out="doc._zpl_safe(doc.customer_label_text)"/>^FS
+
+^A0N,25,25^FO80,790^FDTarima / Pallet ID^FS
+^BY3,2,130
+^FO80,830^BCN,130,Y,N,N^FD<t t-out="doc._zpl_safe(doc.name)"/>^FS
+^FO1450,820^BQN,2,6^FDLA,<t t-out="doc._zpl_safe(doc.qr_payload)"/>^FS
+</t><t t-else="">^A0N,25,25^FO80,650^FDTarima / Pallet ID^FS
+^BY3,2,130
+^FO80,690^BCN,130,Y,N,N^FD<t t-out="doc._zpl_safe(doc.name)"/>^FS
+^FO1450,680^BQN,2,6^FDLA,<t t-out="doc._zpl_safe(doc.qr_payload)"/>^FS
+</t>^XZ
+</t>
     </template>
 
     <template id="report_packing_list">

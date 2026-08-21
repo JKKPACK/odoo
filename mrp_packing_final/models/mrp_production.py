@@ -131,19 +131,6 @@ class MrpProduction(models.Model):
         family = self._packing_family_productions()
         return len(family) > 1 and self == self._packing_main_production()
 
-    def _packing_family_available_lots(self):
-        """Available lots from the original MO plus all of its partial MOs.
-
-        Returns a list of ``(production, lot)`` tuples so each box keeps the
-        exact MO that produced its lot.
-        """
-        self.ensure_one()
-        result = []
-        for production in self._packing_family_productions():
-            for lot in production._available_packing_lots():
-                result.append((production, lot))
-        return result
-
     def _packing_workcenter(self):
         self.ensure_one()
         workcenters = self.workorder_ids.mapped("workcenter_id").filtered(

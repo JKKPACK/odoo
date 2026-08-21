@@ -1,3 +1,38 @@
+
+## 19.0.1.7.4
+- Limpieza técnica de código muerto y artefactos generados.
+- Eliminada la lógica antigua de reimpresión desde `pallet.start.wizard`; la reimpresión se realiza desde la tarima.
+- Eliminados campos antiguos `include_partial_productions` y `partial_production_ids`; la selección de parcialidades usa únicamente `production_selection_line_ids`.
+- Eliminado `production_lot_ids` del wizard de captura por no ser consumido por ninguna vista ni proceso.
+- Eliminados wrappers ZPL Python sin referencias internas (`generate_*_zpl`) y la ruta HTTP Master sin consumidores.
+- Se conservan todos los modelos funcionales y las rutas/acciones activas.
+
+## 19.0.1.7.3
+- Control de previsualización masiva: hasta 50 etiquetas Caja/Bobina se muestran con Labelary.
+- Cuando la selección supera 50 etiquetas, no se solicita ninguna previsualización a Labelary y se genera directamente el ZPL completo mediante `qweb-text`.
+- El control conserva todas las cajas seleccionadas en la salida ZPL; únicamente se omite la vista previa.
+
+## 19.0.1.7.2
+- La etiqueta Master 6x4 ya no muestra fecha de caducidad.
+- La fecha de caducidad se conserva únicamente en la etiqueta Caja/Bobina 4x6 cuando el lote la tiene.
+
+
+## 19.0.1.7.1
+- Ajuste de etiquetas Caja/Bobina y Master según Observaciones Etiquetas General.
+- Leyenda de cliente se imprime únicamente cuando existe en la Orden de Venta; se elimina el fallback al nombre de producto.
+- Campos opcionales de cliente/pedido/máquina no consumen contenido cuando están vacíos.
+- Fecha de caducidad tomada dinámicamente del lote cuando Odoo tiene control de expiración.
+- Master muestra una fecha común; si los lotes tienen fechas distintas indica VARIAS / MULTIPLE.
+- Master 6x4 mantiene 1800x1200, fuerza orientación normal (^FWN/^PON), reduce velocidad/oscuridad y separa barcode/QR de líneas para mejorar impresión física.
+- Código de barras Master reducido a ^BY3 y sin líneas atravesando su área.
+# 19.0.1.7.0
+- Arquitectura ZPL migrada a plantillas QWeb-text reales.
+- Master 6x4 definida completamente en `report_pallet_zpl`.
+- Caja/Bobina 4x6 definida completamente en `report_box_labels_zpl`.
+- Python conserva solo datos, validaciones, helpers de saneamiento y renderizado.
+- Vista previa, descarga y reporte utilizan la misma plantilla QWeb-text, evitando diferencias entre preview e impresión.
+- Se mantienen wrappers `generate_*_zpl()` solo por compatibilidad con integraciones antiguas.
+
 ## 19.0.1.5.0
 
 - Corrige la impresión física de la Master 6x4 en Zebra de 4 pulgadas: se imprime sobre media 4x6 con contenido rotado 90°, evitando cortes.

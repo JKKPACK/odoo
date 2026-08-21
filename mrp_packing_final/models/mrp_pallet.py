@@ -199,7 +199,7 @@ class MrpPallet(models.Model):
     )
     def _compute_zpl(self):
         for rec in self:
-            rec.zpl_pallet = rec.generate_pallet_zpl()
+            rec.zpl_pallet = rec.render_pallet_zpl()
 
     @api.constrains("box_ids")
     def _check_pallet_has_unique_lots(self):
@@ -208,135 +208,30 @@ class MrpPallet(models.Model):
             if len(lots) != len(set(lots.ids)):
                 raise ValidationError(_("No se puede repetir un lote dentro de la misma tarima."))
 
-    def _master_label_values(self):
-        """Valores comunes para la vista previa y la impresión física de la Master."""
+    def _zpl_safe(self, value):
+        """Sanitiza únicamente datos variables; el layout ZPL vive en QWeb-text."""
+        return zpl_safe(value)
+
+    def _zpl_qty(self, value):
+        return qty_text(value)
+
+    def _zpl_date(self, value):
+        return value.strftime("%d/%m/%Y") if value else ""
+
+    def render_pallet_zpl(self):
+        """Renderiza la Master desde la plantilla QWeb-text real."""
         self.ensure_one()
-        return {
-            "product_code": zpl_safe(self.product_id.default_code),
-            "order_no": zpl_safe(self.sale_order_id.name or (self.production_id and self.production_id.name) or _("MANUAL")),
-            "customer_order": zpl_safe(self.customer_order_ref),
-            "label_text": zpl_safe(self.customer_label_text or self.product_id.display_name),
-            "packed_date": self.date_packing.strftime("%d/%m/%Y") if self.date_packing else "",
-            "qr": zpl_safe(self.qr_payload),
-            "pallet": zpl_safe(self.name),
-            "qty": qty_text(self.total_qty),
-            "boxes": self.box_count,
-            "gross": f"{self.total_gross_weight:.2f}",
-            "net": f"{self.total_net_weight:.2f}",
-        }
+        content = self.env["ir.actions.report"]._render_template(
+            "mrp_packing_final.report_pallet_zpl",
+            {
+                "doc_ids": self.ids,
+                "doc_model": self._name,
+                "docs": self,
+            },
+        )
+        return content.decode("utf-8") if isinstance(content, bytes) else str(content)
 
-    def generate_pallet_preview_zpl(self):
-        """Master 6x4 horizontal para pantalla/Labelary (1800x1200 @ 300 dpi)."""
-        self.ensure_one()
-        v = self._master_label_values()
-        return f"""^XA
-^CI28
-^PW1800
-^LL1200
-^LH0,0
-^LS0
-^PR4
-^MD10
-^FO25,25^GB1750,1150,3^FS
-^A0N,32,32^FO55,45^FDETIQUETA MASTER / MASTER PALLET LABEL^FS
-^FO45,90^GB1710,2,2^FS
-
-^A0N,27,27^FO60,120^FDPedido / Order No.^FS
-^A0N,48,48^FO60,158^FD{v['order_no']}^FS
-^A0N,27,27^FO560,120^FDCod. Producto / Product No.^FS
-^A0N,48,48^FO560,158^FD{v['product_code']}^FS
-^A0N,27,27^FO1230,120^FDCant X Tarima / Qty Per Pallet^FS
-^A0N,52,52^FO1230,158^FD{v['qty']}^FS
-^FO45,235^GB1710,2,2^FS
-
-^A0N,27,27^FO60,265^FDPedido Cliente / Customer Order No.^FS
-^A0N,43,43^FO60,305^FB500,1,48,L,0^FD{v['customer_order']}^FS
-^A0N,27,27^FO610,265^FDCajas o Rollos por Tarima^FS
-^A0N,26,26^FO610,300^FDBoxes or Rolls per Pallet^FS
-^A0N,52,52^FO610,338^FD{v['boxes']}^FS
-^A0N,27,27^FO1210,265^FDPeso Bruto / Gross Weight^FS
-^A0N,52,52^FO1210,305^FD{v['gross']} KG^FS
-^FO45,405^GB1710,2,2^FS
-
-^A0N,27,27^FO60,435^FDFecha / Date^FS
-^A0N,44,44^FO60,475^FD{v['packed_date']}^FS
-^A0N,27,27^FO610,435^FDPeso Neto / Net Weight^FS
-^A0N,52,52^FO610,475^FD{v['net']} KG^FS
-^A0N,27,27^FO1210,435^FDTarima / Pallet ID^FS
-^A0N,48,48^FO1210,475^FD{v['pallet']}^FS
-^FO45,555^GB1710,2,2^FS
-
-^A0N,27,27^FO60,585^FDLeyenda Cliente / Customer Label Text^FS
-^A0N,34,34^FO60,625^FB1660,3,40,L,0^FD{v['label_text']}^FS
-^FO45,770^GB1710,2,2^FS
-
-^A0N,25,25^FO80,800^FDTarima / Pallet ID^FS
-^BY4,2,145
-^FO80,840^BCN,145,Y,N,N^FD{v['pallet']}^FS
-^FO1430,830^BQN,2,7^FDLA,{v['qr']}^FS
-^XZ"""
-
-    def generate_pallet_zpl(self):
-        """Master 6x4 para Zebra de 4 pulgadas.
-
-        La etiqueta física es 6x4, pero una ZT411 imprime sobre 4 pulgadas de ancho y
-        6 pulgadas de avance. Por eso se usa un lienzo 4x6 (1200x1800 dots) y todo el
-        contenido se rota 90 grados. Al salir de la impresora, la Master queda 6x4
-        horizontal sin recortar texto.
-        """
-        self.ensure_one()
-        v = self._master_label_values()
-
-        # Media física: 4 x 6 in @ 300 dpi. Campos rotados a la derecha (R).
-        # Tras girar la etiqueta físicamente, el diseño corresponde a 6 x 4 horizontal.
-        return f"""^XA
-^CI28
-^PW1200
-^LL1800
-^LH0,0
-^LS0
-^PR4
-^MD10
-
-^FO25,25^GB1150,1750,3^FS
-^FO1085,45^GB2,1710,2^FS
-^A0R,32,32^FO1125,55^FDETIQUETA MASTER / MASTER PALLET LABEL^FS
-
-^A0R,27,27^FO1050,60^FDPedido / Order No.^FS
-^A0R,48,48^FO1010,60^FD{v['order_no']}^FS
-^A0R,27,27^FO1050,560^FDCod. Producto / Product No.^FS
-^A0R,46,46^FO1010,560^FD{v['product_code']}^FS
-^A0R,27,27^FO1050,1230^FDCant X Tarima / Qty Per Pallet^FS
-^A0R,52,52^FO1010,1230^FD{v['qty']}^FS
-^FO930,45^GB2,1710,2^FS
-
-^A0R,27,27^FO895,60^FDPedido Cliente / Customer Order No.^FS
-^A0R,40,40^FO850,60^FB500,1,44,L,0^FD{v['customer_order']}^FS
-^A0R,27,27^FO895,610^FDCajas o Rollos por Tarima^FS
-^A0R,25,25^FO860,610^FDBoxes or Rolls per Pallet^FS
-^A0R,52,52^FO815,610^FD{v['boxes']}^FS
-^A0R,27,27^FO895,1210^FDPeso Bruto / Gross Weight^FS
-^A0R,52,52^FO850,1210^FD{v['gross']} KG^FS
-^FO765,45^GB2,1710,2^FS
-
-^A0R,27,27^FO730,60^FDFecha / Date^FS
-^A0R,44,44^FO685,60^FD{v['packed_date']}^FS
-^A0R,27,27^FO730,610^FDPeso Neto / Net Weight^FS
-^A0R,52,52^FO685,610^FD{v['net']} KG^FS
-^A0R,27,27^FO730,1210^FDTarima / Pallet ID^FS
-^A0R,48,48^FO685,1210^FD{v['pallet']}^FS
-^FO590,45^GB2,1710,2^FS
-
-^A0R,27,27^FO555,60^FDLeyenda Cliente / Customer Label Text^FS
-^A0R,33,33^FO510,60^FB1660,3,39,L,0^FD{v['label_text']}^FS
-^FO370,45^GB2,1710,2^FS
-
-^A0R,25,25^FO335,80^FDTarima / Pallet ID^FS
-^BY4,2,145
-^FO295,80^BCR,145,Y,N,N^FD{v['pallet']}^FS
-^FO70,1370^BQR,2,7^FDLA,{v['qr']}^FS
-^XZ"""
-
+    # Compatibilidad con integraciones antiguas. El ZPL ya no está definido en Python.
     @api.depends("box_ids.sequence", "box_ids.name", "box_ids.lot_id.name", "box_ids.master_lot")
     def _compute_box_lot_summary(self):
         for rec in self:
@@ -356,7 +251,7 @@ class MrpPallet(models.Model):
     def _open_master_zpl_preview(self):
         """Genera la previsualización de la etiqueta Master 6x4 y abre el asistente."""
         self.ensure_one()
-        zpl_code = self.generate_pallet_preview_zpl()
+        zpl_code = self.render_pallet_zpl()
         try:
             response = requests.post(
                 "https://api.labelary.com/v1/printers/12dpmm/labels/6x4/0/",
@@ -392,10 +287,6 @@ class MrpPallet(models.Model):
 
     def action_print_browser_master(self):
         # La impresión siempre pasa primero por la previsualización.
-        return self._open_master_zpl_preview()
-
-    def action_download_zpl_master(self):
-        # Compatibilidad con acciones antiguas: ya no existe un botón separado.
         return self._open_master_zpl_preview()
 
     def action_print_all_boxes(self):

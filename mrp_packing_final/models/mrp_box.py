@@ -62,6 +62,11 @@ class MrpBox(models.Model):
     )
     lot_code = fields.Char(compute="_compute_lot_code", string="Código de lote")
     qr_payload = fields.Char(compute="_compute_qr_payload", string="Contenido QR")
+    expiration_date_text = fields.Char(
+        compute="_compute_expiration_date_text",
+        string="Fecha Caducidad",
+        help="Fecha de caducidad tomada del lote cuando el control de expiración está disponible.",
+    )
     zpl_box = fields.Text(compute="_compute_zpl", string="ZPL Caja/Bobina")
 
     @api.model_create_multi
@@ -82,6 +87,24 @@ class MrpBox(models.Model):
     def _compute_lot_code(self):
         for rec in self:
             rec.lot_code = rec.lot_id.name or rec.master_lot or rec.name or ""
+
+    @api.depends("lot_id", "lot_id.write_date")
+    def _compute_expiration_date_text(self):
+        """Muestra la fecha de caducidad del lote sin forzar stock_expiration como dependencia.
+
+        Odoo añade ``expiration_date`` al lote cuando está instalado el control de
+        caducidad. La comprobación dinámica mantiene compatible el módulo en bases
+        donde esa funcionalidad no está habilitada.
+        """
+        for rec in self:
+            value = False
+            lot = rec.lot_id
+            if lot:
+                for field_name in ("expiration_date", "use_date", "life_date"):
+                    if field_name in lot._fields and lot[field_name]:
+                        value = lot[field_name]
+                        break
+            rec.expiration_date_text = value.strftime("%d/%m/%Y") if value and hasattr(value, "strftime") else (str(value) if value else False)
 
     @api.depends("pallet_id.product_id.default_code", "lot_code", "qty_per_box")
     def _compute_qr_payload(self):
@@ -106,10 +129,11 @@ class MrpBox(models.Model):
         "qty_per_box",
         "mill_roll",
         "customer_item_no",
+        "expiration_date_text",
     )
     def _compute_zpl(self):
         for rec in self:
-            rec.zpl_box = rec.generate_box_zpl()
+            rec.zpl_box = rec.render_box_zpl()
 
     @api.constrains("lot_id", "source_production_id", "production_id", "product_id", "pallet_id")
     def _check_unique_lot_per_scope(self):
@@ -152,88 +176,28 @@ class MrpBox(models.Model):
             if rec.qty_per_box <= 0:
                 raise ValidationError(_("La cantidad por caja/bobina debe ser mayor a cero."))
 
-    def generate_box_zpl(self):
-        """Etiqueta Caja/Bobina 4x6 pulgadas, vertical, 300 dpi (12 dpmm)."""
+    def _zpl_safe(self, value):
+        """Sanitiza únicamente datos variables; el layout ZPL vive en QWeb-text."""
+        return zpl_safe(value)
+
+    def _zpl_qty(self, value):
+        return qty_text(value)
+
+    def _zpl_date(self, value):
+        return value.strftime("%d/%m/%Y") if value else ""
+
+    def render_box_zpl(self):
+        """Renderiza la etiqueta 4x6 desde su plantilla QWeb-text real."""
         self.ensure_one()
-        pallet = self.pallet_id
-        production = self.source_production_id or pallet.production_id
-        manufacturing_no = production.name if production else _("MANUAL")
-        product_code = zpl_safe(pallet.product_id.default_code)
-        lot_code = zpl_safe(self.lot_code)
-        operator = zpl_safe(pallet.operator_id.name)
-        customer_code = zpl_safe(pallet.customer_code)
-        customer_item = zpl_safe(self.customer_item_no)
-        sale_order = zpl_safe(pallet.sale_order_id.name)
-        customer_order = zpl_safe(pallet.customer_order_ref)
-        label_text = zpl_safe(pallet.customer_label_text or pallet.product_id.display_name)
-        machine = zpl_safe(pallet.machine)
-        date_text = pallet.date_packing.strftime("%d/%m/%Y") if pallet.date_packing else ""
-        qty = qty_text(self.qty_per_box)
-        mill = qty_text(self.mill_roll)
-        qr = zpl_safe(self.qr_payload)
-
-        # 4 x 6 in @ 300 dpi: 1200 x 1800 dots. Portrait layout.
-        return f"""^XA
-^CI28
-^PW1200
-^LL1800
-^LH0,0
-^LS0
-^PR4
-^MD10
-^FO25,25^GB1150,1745,3^FS
-^FO45,45^GB1110,115,2^FS
-^A0N,30,30^FO65,60^FDO. FAB / MFG NO.^FS
-^A0N,45,45^FO65,98^FD{zpl_safe(manufacturing_no)}^FS
-^A0N,30,30^FO575,60^FDCOD. PRODUCTO / PRODUCT NO.^FS
-^A0N,43,43^FO575,98^FD{product_code}^FS
-
-^FO45,180^GB1110,210,2^FS
-^A0N,28,28^FO65,198^FDRollo Maestro / Master Roll^FS
-^A0N,47,47^FO65,235^FD{lot_code}^FS
-^A0N,28,28^FO720,198^FDCASE BOX ID #^FS
-^A0N,58,58^FO780,240^FD{self.sequence}^FS
-^A0N,25,25^FO65,315^FDCliente / Customer:^FS
-^A0N,35,35^FO295,310^FD{customer_code}^FS
-^A0N,25,25^FO650,315^FDFecha / Date:^FS
-^A0N,35,35^FO820,310^FD{date_text}^FS
-
-^FO45,410^GB1110,205,2^FS
-^A0N,25,25^FO65,430^FDOperador / Operator^FS
-^A0N,34,34^FO65,465^FD{operator}^FS
-^A0N,25,25^FO600,430^FDMáquina / Machine^FS
-^A0N,34,34^FO600,465^FD{machine}^FS
-^A0N,23,23^FO65,525^FDPedido JkkPack / Sales Order^FS
-^A0N,31,31^FO65,558^FD{sale_order}^FS
-^A0N,23,23^FO430,525^FDPedido Cliente / Customer Order^FS
-^A0N,31,31^FO430,558^FB430,1,34,L,0^FD{customer_order}^FS
-^A0N,23,23^FO900,525^FDQty^FS
-^A0N,31,31^FO900,558^FD{mill}^FS
-
-^FO45,635^GB1110,250,2^FS
-^A0N,26,26^FO65,655^FDDestiny / Customer Item #^FS
-^A0N,43,43^FO65,692^FD{customer_item}^FS
-^A0N,26,26^FO65,755^FDPeso Bruto / Gross Weight^FS
-^A0N,42,42^FO65,792^FD{self.peso_bruto:.2f} KG^FS
-^A0N,26,26^FO600,755^FDPeso Neto / Net Weight^FS
-^A0N,42,42^FO600,792^FD{self.peso_neto:.2f} KG^FS
-
-^FO45,905^GB1110,205,2^FS
-^A0N,27,27^FO65,925^FDLeyenda Cliente / Customer Label Text^FS
-^A0N,34,34^FO65,965^FB1060,3,40,L,0^FD{label_text}^FS
-
-^A0N,24,24^FO65,1135^FDCustomer Item #^FS
-^BY3,2,105
-^FO65,1170^BCN,105,Y,N,N^FD{customer_item}^FS
-^A0N,24,24^FO650,1135^FDQty Mill/Roll^FS
-^BY3,2,105
-^FO650,1170^BCN,105,Y,N,N^FD{qty}^FS
-
-^A0N,24,24^FO65,1375^FDLote / Lot ID^FS
-^BY3,2,120
-^FO65,1410^BCN,120,Y,N,N^FD{lot_code}^FS
-^FO865,1365^BQN,2,7^FDLA,{qr}^FS
-^XZ"""
+        content = self.env["ir.actions.report"]._render_template(
+            "mrp_packing_final.report_box_labels_zpl",
+            {
+                "doc_ids": self.ids,
+                "doc_model": self._name,
+                "docs": self,
+            },
+        )
+        return content.decode("utf-8") if isinstance(content, bytes) else str(content)
 
     def action_preview_zpl_boxes(self, pallet=None):
         """Previsualiza una o varias etiquetas 4x6 antes de enviarlas a Zebra."""
@@ -241,10 +205,19 @@ class MrpBox(models.Model):
         if not boxes:
             raise UserError(_("No existen cajas/bobinas para previsualizar."))
 
+        # Labelary limita la previsualización a un máximo operativo de 50 etiquetas.
+        # Para lotes mayores generamos directamente el reporte qweb-text completo,
+        # evitando llamadas de previsualización y conservando todas las etiquetas
+        # en el ZPL final.
+        if len(boxes) > 50:
+            return self.env.ref(
+                "mrp_packing_final.action_report_box_labels_zpl"
+            ).report_action(boxes)
+
         preview_lines = []
         all_zpl = []
         for index, box in enumerate(boxes, start=1):
-            zpl_code = box.generate_box_zpl()
+            zpl_code = box.render_box_zpl()
             all_zpl.append(zpl_code)
             try:
                 response = requests.post(

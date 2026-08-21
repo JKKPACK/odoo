@@ -9,7 +9,7 @@
                     <button name="action_load_partial_productions" type="object"
                             string="Cargar producciones parciales" icon="fa-refresh"
                             class="btn-primary"
-                            invisible="is_reprint or not can_pack_partial_productions"/>
+                            invisible="not can_pack_partial_productions"/>
                 </header>
                 <group>
                     <field name="production_id" readonly="1"/>
@@ -17,8 +17,6 @@
                     <field name="workcenter_id" domain="[('is_finished_product', '=', True)]" invisible="not workcenter_id"/>
                     <field name="machine" readonly="1" invisible="not machine"/>
                     <field name="can_pack_partial_productions" invisible="1"/>
-                    <field name="include_partial_productions" invisible="1"/>
-                    <field name="partial_production_ids" invisible="1"/>
                     <field name="production_selection_line_ids" nolabel="1"
                            invisible="not production_selection_line_ids">
                         <list editable="bottom" create="0" delete="0">
@@ -29,9 +27,7 @@
                             <field name="available_lot_count"/>
                         </list>
                     </field>
-                    <field name="num_boxes" string="¿Cuántas cajas/bobinas tiene la tarima?" invisible="is_reprint"/>
-                    <field name="is_reprint" invisible="1"/>
-                    <field name="pallet_id" invisible="1"/>
+                    <field name="num_boxes" string="¿Cuántas cajas/bobinas tiene la tarima?"/>
                 </group>
                 <footer>
                     <button name="action_next" string="Siguiente - Capturar lotes y pesos" type="object" class="oe_highlight"/>

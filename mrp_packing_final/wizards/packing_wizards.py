@@ -20,23 +20,8 @@ class PalletStartWizard(models.TransientModel):
     num_boxes = fields.Integer(
         string="Número de cajas/bobinas que van en la tarima", required=True, default=24
     )
-    pallet_id = fields.Many2one("mrp.pallet", string="Tarima existente (reimpresión)")
-    is_reprint = fields.Boolean(default=False)
     can_pack_partial_productions = fields.Boolean(
         string="Puede agrupar producciones parciales",
-        compute="_compute_partial_production_options",
-    )
-    include_partial_productions = fields.Boolean(
-        string="Incluir todas las producciones parciales",
-        help=(
-            "Solo disponible en la producción principal. Al activarlo, la captura "
-            "incluye los lotes disponibles de la producción principal y de todas "
-            "sus producciones parciales/backorders."
-        ),
-    )
-    partial_production_ids = fields.Many2many(
-        "mrp.production",
-        string="Producciones relacionadas",
         compute="_compute_partial_production_options",
     )
     production_selection_line_ids = fields.One2many(
@@ -51,10 +36,8 @@ class PalletStartWizard(models.TransientModel):
             if wizard.production_id and wizard.production_id._is_main_packing_production():
                 family = wizard.production_id._packing_family_productions()
                 wizard.can_pack_partial_productions = len(family) > 1
-                wizard.partial_production_ids = family
             else:
                 wizard.can_pack_partial_productions = False
-                wizard.partial_production_ids = self.env["mrp.production"]
 
     @api.model
     def default_get(self, fields_list):
@@ -63,17 +46,6 @@ class PalletStartWizard(models.TransientModel):
         context = self.env.context
 
         production = self.env["mrp.production"]
-        pallet = self.env["mrp.pallet"]
-
-        pallet_id = values.get("pallet_id") or context.get("default_pallet_id")
-        if pallet_id:
-            pallet = self.env["mrp.pallet"].browse(pallet_id).exists()
-            if pallet:
-                production = pallet.production_id
-                values.setdefault("operator_id", pallet.operator_id.id)
-                values.setdefault("workcenter_id", pallet.workcenter_id.id)
-                values.setdefault("machine", pallet.machine)
-
         production_id = (
             values.get("production_id")
             or context.get("default_production_id")
@@ -106,21 +78,8 @@ class PalletStartWizard(models.TransientModel):
         workcenter = self.production_id._packing_workcenter()
         self.workcenter_id = workcenter
         self.machine = workcenter.name if workcenter else False
-        self.include_partial_productions = False
         available_lots = self.production_id._available_packing_lots()
         self.num_boxes = len(available_lots) or 1
-
-    @api.onchange("include_partial_productions")
-    def _onchange_include_partial_productions(self):
-        if not self.production_id:
-            return
-        if self.include_partial_productions:
-            if not self.production_id._is_main_packing_production():
-                self.include_partial_productions = False
-                return
-            self.num_boxes = len(self.production_id._packing_family_available_lots()) or 1
-        else:
-            self.num_boxes = len(self.production_id._available_packing_lots()) or 1
 
     def action_load_partial_productions(self):
         """Load the MO family explicitly so the operator can choose partials."""
@@ -150,7 +109,6 @@ class PalletStartWizard(models.TransientModel):
             if selected:
                 total_lots += available_count
         self.production_selection_line_ids = commands
-        self.include_partial_productions = True
         self.num_boxes = total_lots or 1
         return {
             "type": "ir.actions.act_window",
@@ -169,7 +127,6 @@ class PalletStartWizard(models.TransientModel):
         for line in self.production_selection_line_ids.filtered("is_main"):
             line.selected = True
         selected = self.production_selection_line_ids.filtered("selected").mapped("production_id")
-        self.include_partial_productions = len(selected) > 1
         self.num_boxes = sum(len(mo._available_packing_lots()) for mo in selected) or 1
 
     @api.onchange("workcenter_id")
@@ -185,9 +142,6 @@ class PalletStartWizard(models.TransientModel):
 
     def action_next(self):
         self.ensure_one()
-        if self.is_reprint and self.pallet_id:
-            return self.pallet_id.action_print_browser_master()
-
         selected_lines = self.production_selection_line_ids.filtered("selected")
         if selected_lines:
             main_lines = self.production_selection_line_ids.filtered("is_main")
@@ -290,7 +244,6 @@ class BoxEntryWizard(models.TransientModel):
         readonly=True,
     )
     product_id = fields.Many2one(related="pallet_id.product_id", string="Producto", readonly=True)
-    production_lot_ids = fields.Many2many("stock.lot", compute="_compute_lots", string="Lotes de producción")
     lot_ids_empacados = fields.Many2many("stock.lot", compute="_compute_lots", string="Lotes ya empacados")
     lot_ids_disponibles = fields.Many2many("stock.lot", compute="_compute_lots", string="Lotes disponibles")
     line_ids = fields.One2many("box.entry.line", "wizard_id", string="Cajas/Bobinas")
@@ -355,7 +308,6 @@ class BoxEntryWizard(models.TransientModel):
                 used |= lots.filtered(lambda lot: lot.name in legacy_names)
 
             current_lots = wizard.pallet_id.box_ids.mapped("lot_id") if wizard.pallet_id else Lot
-            wizard.production_lot_ids = lots
             wizard.lot_ids_empacados = used & lots
             wizard.lot_ids_disponibles = (lots - used) | current_lots
 
