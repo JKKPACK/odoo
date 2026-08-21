@@ -15,10 +15,10 @@ class PalletLabelPreviewWizard(models.TransientModel):
     pallet_id = fields.Many2one("mrp.pallet", string="Tarima", readonly=True)
     box_ids = fields.Many2many("mrp.box", string="Cajas/Bobinas", readonly=True)
     preview_line_ids = fields.One2many(
-        "pallet.label.preview.line", "wizard_id", string="Etiquetas", readonly=True
+        "pallet.label.preview.line", "wizard_id", string="Vistas previas", readonly=True
     )
     zpl_code = fields.Text(string="Código ZPL completo", readonly=True)
-    label_count = fields.Integer(string="Etiquetas", compute="_compute_label_count")
+    label_count = fields.Integer(string="Cantidad de etiquetas", compute="_compute_label_count")
 
     def _compute_label_count(self):
         for wizard in self:
@@ -49,6 +49,6 @@ class PalletLabelPreviewLine(models.TransientModel):
         "pallet.label.preview.wizard", required=True, ondelete="cascade"
     )
     sequence = fields.Integer(default=10)
-    name = fields.Char(string="Etiqueta", readonly=True)
-    preview_image = fields.Binary(string="Etiqueta", readonly=True)
+    name = fields.Char(string="Nombre de etiqueta", readonly=True)
+    preview_image = fields.Binary(string="Imagen de etiqueta", readonly=True)
     zpl_code = fields.Text(string="ZPL", readonly=True)

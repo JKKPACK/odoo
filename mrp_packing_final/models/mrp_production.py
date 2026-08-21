@@ -1,3 +1,5 @@
+from dateutil.relativedelta import relativedelta
+
 from odoo import api, fields, models
 
 
@@ -36,6 +38,36 @@ class MrpProduction(models.Model):
         readonly=False,
         help="Texto capturado por CRM/Ventas que se imprime en la etiqueta.",
     )
+    # Campos heredados del antiguo módulo jkk_report. Se conservan con los
+    # mismos nombres para mantener sus datos al retirar dicho módulo.
+    expiration_date = fields.Date(
+        string="Fecha de Caducidad",
+        compute="_compute_expiration_date",
+        store=True,
+    )
+    design_no = fields.Char(string="Diseño No")
+    production_type = fields.Selection(
+        [("standard", "Estándar"), ("special", "Especial")],
+        string="Tipo",
+        default="standard",
+    )
+    origin_type = fields.Selection(
+        [("manual", "Manual"), ("reprocess", "Reproceso")],
+        string="Origen",
+        default="manual",
+    )
+    order_type = fields.Selection(
+        [("normal", "Normal"), ("special", "Especial")],
+        string="Tipo Orden",
+        default="normal",
+    )
+    sale_reference = fields.Char(
+        related="sale_order_id.name", string="Referencia SO", store=True
+    )
+    bom_reference = fields.Char(
+        related="bom_id.display_name", string="Lista Materiales", store=True
+    )
+
     customer_item_no = fields.Char(string="Customer Item # / Destiny Item #")
     pallet_ids = fields.One2many("mrp.pallet", "production_id", string="Tarimas")
     pallet_count = fields.Integer(compute="_compute_pallet_count")
@@ -59,13 +91,26 @@ class MrpProduction(models.Model):
                 rec.customer_code = so.partner_id.ref or str(so.partner_id.id)
                 rec.customer_name = so.partner_id.name
                 rec.customer_order_ref = so.client_order_ref or False
-                rec.customer_label_text = so.packing_label_text or rec.customer_label_text
+                rec.customer_label_text = so.packing_label_text or False
             else:
                 rec.sale_order_id = False
                 rec.customer_code = rec.customer_code or False
                 rec.customer_name = rec.customer_name or False
                 rec.customer_order_ref = rec.customer_order_ref or False
                 rec.customer_label_text = rec.customer_label_text or False
+
+
+    @api.depends("date_start", "date_finished")
+    def _compute_expiration_date(self):
+        for production in self:
+            base_date = (
+                production.date_finished
+                or production.date_start
+                or fields.Datetime.now()
+            )
+            production.expiration_date = (
+                fields.Date.to_date(base_date) + relativedelta(years=1)
+            )
 
     def _compute_pallet_count(self):
         for rec in self:

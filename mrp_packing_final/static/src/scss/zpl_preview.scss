@@ -67,3 +67,9 @@
     gap: 5px;
     white-space: nowrap;
 }
+
+.o_mrp_zpl_preview_form .o_mrp_zpl_preview_receipt .o_field_image img {
+    /* Etiqueta de recepción Zebra 4x6: misma presentación que Caja/Bobina. */
+    max-width: 430px !important;
+    max-height: 70vh !important;
+}

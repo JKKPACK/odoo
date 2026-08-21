@@ -101,3 +101,12 @@
 - Cada caja/bobina conserva la **Producción origen** que generó su lote.
 - El flujo individual existente se mantiene sin cambios cuando el check no está activo.
 - Se evita reutilizar lotes ya empacados, incluyendo registros históricos sin `source_production_id`.
+
+## 19.0.1.8.0
+- Integra completamente las funciones de `jkk_report` dentro de `mrp_packing_final`.
+- Integra completamente las funciones de `zebra_label_preview` dentro de `mrp_packing_final`.
+- Conserva los mismos nombres técnicos de campos persistentes para que sus valores no cambien de columna.
+- Migra reportes MRP, reporte de componentes, personalización de compras y validación de sobre-recepción.
+- Migra campos de recepción Zebra, vista previa Labelary, impresión masiva y reporte ZPL 4x6 QWeb-text.
+- El reporte Zebra de recepción ahora usa el XML ID `mrp_packing_final.action_report_zebra_jkkpack`.
+- Se conserva el script de validación ZPL en `scripts/validate_zpl_params.py`.

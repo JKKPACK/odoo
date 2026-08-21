@@ -7,3 +7,5 @@ access_box_entry_line,box.entry.line,model_box_entry_line,base.group_user,1,1,1,
 access_pallet_label_preview_wizard,pallet.label.preview.wizard,model_pallet_label_preview_wizard,base.group_user,1,1,1,1
 access_pallet_label_preview_line,pallet.label.preview.line,model_pallet_label_preview_line,base.group_user,1,1,1,1
 access_pallet_start_production_line,pallet.start.production.line,model_pallet_start_production_line,base.group_user,1,1,1,1
+access_stock_label_preview_wizard,stock.label.preview.wizard,model_stock_label_preview_wizard,base.group_user,1,1,1,1
+access_stock_label_preview_line,stock.label.preview.line,model_stock_label_preview_line,base.group_user,1,1,1,1

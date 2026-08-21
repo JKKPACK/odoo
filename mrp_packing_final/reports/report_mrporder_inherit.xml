@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <template id="report_mrporder_jkk" inherit_id="mrp.report_mrporder">
+    <xpath expr="//div[hasclass('page')]" position="replace">
+      <div class="page" style="font-family:Arial, sans-serif; color:#222;">
+        <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+          <tr>
+            <td style="width:68%; vertical-align:middle;">
+              <div style="font-size:11px; text-transform:uppercase; color:#666;">Manufactura / Manufacturing</div>
+              <div style="font-size:24px; font-weight:700; margin-top:3px;">Orden de Fabricación</div>
+              <div style="font-size:15px; font-weight:700; margin-top:3px;"><span t-field="o.name"/></div>
+            </td>
+            <td style="width:32%; text-align:right; vertical-align:middle;">
+              <span t-field="o.name" t-options="{'widget':'barcode','width':600,'height':100,'img_style':'width:300px;height:52px'}"/>
+            </td>
+          </tr>
+        </table>
+        <div style="border-top:3px solid #333; margin-bottom:14px;"></div>
+
+        <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:14px; font-size:10px;">
+          <tr>
+            <td style="width:50%; vertical-align:top; padding-right:8px;">
+              <table style="width:100%; border-collapse:collapse;">
+                <tr><td style="padding:6px; background:#f2f2f2; width:38%; font-weight:700;">Fecha vencimiento</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.date_deadline"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Código Cliente</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.customer_code"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Pedido Cliente</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.customer_order_ref"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Artículo</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.product_id.default_code"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Descripción</td><td style="padding:6px; border-bottom:1px solid #ddd; overflow-wrap:anywhere;"><span t-field="o.product_id.display_name"/></td></tr>
+              </table>
+            </td>
+            <td style="width:50%; vertical-align:top; padding-left:8px;">
+              <table style="width:100%; border-collapse:collapse;">
+                <tr><td style="padding:6px; background:#f2f2f2; width:38%; font-weight:700;">Diseño No.</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.design_no"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Tipo / Origen</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.production_type"/> / <span t-field="o.origin_type"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Estado</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.state"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Cliente</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.customer_name"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Lista Materiales</td><td style="padding:6px; border-bottom:1px solid #ddd; overflow-wrap:anywhere;"><span t-field="o.bom_reference"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Cantidad</td><td style="padding:6px; border-bottom:1px solid #ddd; font-weight:700;"><span t-field="o.product_qty"/> <span t-field="o.product_uom_id"/></td></tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <div style="font-size:14px; font-weight:700; margin:14px 0 7px; padding-bottom:5px; border-bottom:2px solid #333;">Componentes / Components</div>
+        <t t-call="mrp.report_mrp_production_components"/>
+      </div>
+    </xpath>
+  </template>
+</odoo>
