@@ -38,6 +38,8 @@
                         <field name="source_production_id" readonly="1" invisible="not source_production_id"/>
                             <field name="lot_id"/>
                             <field name="sequence"/>
+                            <field name="process_workcenter_name" readonly="1" invisible="not process_workcenter_name"/>
+                            <field name="parent_roll_lots" readonly="1" invisible="not parent_roll_lots"/>
                         </group>
                         <group>
                             <field name="operator_id" readonly="1"/>
@@ -65,6 +67,8 @@
                 <field name="production_id" optional="show"/>
                 <field name="source_production_id" optional="show"/>
                 <field name="lot_id"/>
+                <field name="process_workcenter_name" optional="show"/>
+                <field name="parent_roll_lots" optional="show"/>
                 <field name="operator_id" optional="show"/>
                 <field name="peso_bruto" sum="Peso bruto"/>
                 <field name="peso_neto" sum="Peso neto"/>

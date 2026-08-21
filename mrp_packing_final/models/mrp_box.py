@@ -70,6 +70,32 @@ class MrpBox(models.Model):
             "Para tarimas manuales, si no existe producción, se intenta tomar del lote."
         ),
     )
+    process_workcenter_name = fields.Char(
+        compute="_compute_process_label_data",
+        string="Proceso / Centro de Trabajo",
+        help="Centro de trabajo del proceso que originó la caja/bobina (Impresión, Laminación, etc.).",
+    )
+    parent_roll_lots = fields.Char(
+        compute="_compute_process_label_data",
+        string="Rollo Padre",
+        help="Lotes consumidos de los componentes de la producción origen, separados por '/'.",
+    )
+    material_type_text = fields.Char(
+        compute="_compute_process_label_data",
+        string="Tipo Material",
+    )
+    thickness_text = fields.Char(
+        compute="_compute_process_label_data",
+        string="Calibre",
+    )
+    width_text = fields.Char(
+        compute="_compute_process_label_data",
+        string="Ancho",
+    )
+    operator_number = fields.Char(
+        compute="_compute_process_label_data",
+        string="Nómina",
+    )
     zpl_box = fields.Text(compute="_compute_zpl", string="ZPL Caja/Bobina")
 
     @api.model_create_multi
@@ -123,6 +149,103 @@ class MrpBox(models.Model):
                 else (str(value) if value else False)
             )
 
+    @staticmethod
+    def _first_dynamic_value(record, field_names):
+        """Return the first populated optional/custom field without hard dependencies."""
+        if not record:
+            return False
+        for field_name in field_names:
+            if field_name in record._fields:
+                value = record[field_name]
+                if value not in (False, None, ""):
+                    return value
+        return False
+
+    @staticmethod
+    def _format_dynamic_value(value):
+        if value in (False, None, ""):
+            return False
+        if isinstance(value, float):
+            return ("%.2f" % value).rstrip("0").rstrip(".")
+        return str(value)
+
+    @api.depends(
+        "source_production_id",
+        "source_production_id.workorder_ids.workcenter_id",
+        "source_production_id.move_raw_ids.move_line_ids.lot_id",
+        "source_production_id.move_raw_ids.move_line_ids.lot_name",
+        "production_id",
+        "production_id.workorder_ids.workcenter_id",
+        "production_id.move_raw_ids.move_line_ids.lot_id",
+        "production_id.move_raw_ids.move_line_ids.lot_name",
+        "product_id",
+        "product_id.categ_id",
+        "product_id.write_date",
+        "operator_id",
+    )
+    def _compute_process_label_data(self):
+        """Prepare process-label data shown in the box/roll ZPL.
+
+        * Process is the work center that generated the output roll.
+        * Parent roll is composed from ALL component lots consumed by the source MO.
+        * Material type/calibre/width reuse existing product/custom fields when available,
+          without forcing a dependency on another custom addon.
+        """
+        for rec in self:
+            production = rec.source_production_id or rec.production_id
+
+            workcenter = False
+            if production:
+                workorders = production.workorder_ids.filtered("workcenter_id").sorted(
+                    lambda wo: (getattr(wo, "sequence", 0) or 0, wo.id)
+                )
+                if workorders:
+                    # The last operation is the process from which the resulting roll exits.
+                    workcenter = workorders[-1].workcenter_id
+            if not workcenter and rec.pallet_id.workcenter_id:
+                workcenter = rec.pallet_id.workcenter_id
+            rec.process_workcenter_name = workcenter.name if workcenter else False
+
+            parent_names = []
+            if production:
+                raw_moves = production.move_raw_ids.sorted(
+                    lambda move: (getattr(move, "sequence", 0) or 0, move.id)
+                )
+                for move in raw_moves:
+                    for line in move.move_line_ids.sorted("id"):
+                        lot_name = line.lot_id.name or getattr(line, "lot_name", False)
+                        if lot_name and lot_name not in parent_names:
+                            parent_names.append(lot_name)
+            rec.parent_roll_lots = "/".join(parent_names) or False
+
+            product = rec.product_id
+            template = product.product_tmpl_id if product else False
+            material = (
+                rec._first_dynamic_value(production, ("material_type", "x_material_type", "tipo_material"))
+                or rec._first_dynamic_value(product, ("material_type", "x_material_type", "tipo_material"))
+                or rec._first_dynamic_value(template, ("material_type", "x_material_type", "tipo_material"))
+                or (product.categ_id.display_name if product and product.categ_id else False)
+            )
+            thickness = (
+                rec._first_dynamic_value(production, ("x_calibre", "calibre", "thickness", "x_thickness"))
+                or rec._first_dynamic_value(product, ("x_calibre", "calibre", "thickness", "x_thickness"))
+                or rec._first_dynamic_value(template, ("x_calibre", "calibre", "thickness", "x_thickness"))
+            )
+            width = (
+                rec._first_dynamic_value(production, ("x_ancho", "ancho", "width", "x_width"))
+                or rec._first_dynamic_value(product, ("x_ancho", "ancho", "width", "x_width"))
+                or rec._first_dynamic_value(template, ("x_ancho", "ancho", "width", "x_width"))
+            )
+            rec.material_type_text = rec._format_dynamic_value(material)
+            rec.thickness_text = rec._format_dynamic_value(thickness)
+            rec.width_text = rec._format_dynamic_value(width)
+
+            employee = rec.operator_id
+            number = rec._first_dynamic_value(
+                employee, ("identification_id", "barcode", "employee_number", "registration_number")
+            )
+            rec.operator_number = rec._format_dynamic_value(number)
+
     @api.depends("pallet_id.product_id.default_code", "lot_code", "qty_per_box")
     def _compute_qr_payload(self):
         for rec in self:
@@ -147,6 +270,12 @@ class MrpBox(models.Model):
         "mill_roll",
         "customer_item_no",
         "expiration_date_text",
+        "process_workcenter_name",
+        "parent_roll_lots",
+        "material_type_text",
+        "thickness_text",
+        "width_text",
+        "operator_number",
     )
     def _compute_zpl(self):
         for rec in self:
