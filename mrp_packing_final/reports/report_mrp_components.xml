@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <template id="report_mrp_production_components_jkk" inherit_id="mrp.report_mrp_production_components">
+    <xpath expr="//table" position="replace">
+      <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:9px;">
+        <thead style="display:table-header-group;">
+          <tr style="background:#333; color:#fff;">
+            <th style="width:5%; padding:7px 4px; text-align:center;">#</th>
+            <th style="width:18%; padding:7px 5px; text-align:left;">Artículo</th>
+            <th style="width:37%; padding:7px 5px; text-align:left;">Descripción</th>
+            <th style="width:10%; padding:7px 5px; text-align:center;">UM</th>
+            <th style="width:15%; padding:7px 5px; text-align:right;">Cantidad</th>
+            <th style="width:15%; padding:7px 5px; text-align:left;">Almacén / Ubicación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <t t-set="i" t-value="1"/>
+          <t t-foreach="o.move_raw_ids.sorted(key=lambda m: m.sequence)" t-as="move">
+            <tr t-att-style="'background:#f7f7f7;' if i % 2 == 0 else ''" style="page-break-inside:avoid; border-bottom:1px solid #ddd;">
+              <td style="padding:6px 4px; text-align:center;"><span t-esc="i"/></td>
+              <td style="padding:6px 5px; font-weight:700; overflow-wrap:anywhere;"><span t-field="move.product_id.default_code"/></td>
+              <td style="padding:6px 5px; overflow-wrap:anywhere;"><span t-field="move.product_id.display_name"/></td>
+              <td style="padding:6px 5px; text-align:center;"><span t-field="move.product_uom"/></td>
+              <td style="padding:6px 5px; text-align:right; font-weight:700;"><span t-field="move.product_uom_qty"/></td>
+              <td style="padding:6px 5px; overflow-wrap:anywhere;"><span t-field="move.location_id.display_name"/></td>
+            </tr>
+            <t t-set="i" t-value="i + 1"/>
+          </t>
+        </tbody>
+      </table>
+    </xpath>
+  </template>
+</odoo>

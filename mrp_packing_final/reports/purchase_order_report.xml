@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="purchase_order_document_jkk" inherit_id="purchase.report_purchaseorder_document">
+
+        <xpath expr="//t[@t-set='layout_document_title']" position="replace">
+            <t t-set="layout_document_title">
+                <div style="line-height:1.15;">
+                    <t t-if="o.state in ('draft','sent','to approve')">
+                        <span style="font-size:22px; font-weight:700;">SOLICITUD DE COTIZACIÓN</span><br/>
+                        <span style="font-size:13px; color:#666;">REQUEST FOR QUOTATION · </span>
+                        <span style="font-size:16px; font-weight:700;" t-field="o.name"/>
+                    </t>
+                    <t t-if="o.state == 'purchase'">
+                        <span style="font-size:22px; font-weight:700;">ORDEN DE COMPRA</span><br/>
+                        <span style="font-size:13px; color:#666;">PURCHASE ORDER · </span>
+                        <span style="font-size:16px; font-weight:700;" t-field="o.name"/>
+                    </t>
+                    <t t-if="o.state == 'cancel'">
+                        <span style="font-size:22px; font-weight:700;">ORDEN DE COMPRA CANCELADA</span><br/>
+                        <span style="font-size:13px; color:#666;">CANCELLED PURCHASE ORDER · </span>
+                        <span style="font-size:16px; font-weight:700;" t-field="o.name"/>
+                    </t>
+                </div>
+            </t>
+        </xpath>
+
+        <!-- Resumen visual antes del detalle. Mantiene el external_layout estándar. -->
+        <xpath expr="//table[hasclass('o_main_table')]" position="before">
+            <div style="margin:10px 0 14px 0; border:1px solid #d7d7d7; border-radius:6px; overflow:hidden;">
+                <div style="background:#f3f3f3; padding:7px 10px; font-weight:700; font-size:12px;">
+                    INFORMACIÓN DE COMPRA / PURCHASE INFORMATION
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                    <tbody>
+                        <tr>
+                            <td style="width:18%; padding:7px 10px; color:#666;">Proveedor / Vendor</td>
+                            <td style="width:32%; padding:7px 10px; font-weight:600;"><span t-field="o.partner_id"/></td>
+                            <td style="width:18%; padding:7px 10px; color:#666;">Fecha / Date</td>
+                            <td style="width:32%; padding:7px 10px; font-weight:600;"><span t-field="o.date_order" t-options="{'widget':'date'}"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding:7px 10px; color:#666; border-top:1px solid #e7e7e7;">Término de pago / Payment Term</td>
+                            <td style="padding:7px 10px; font-weight:600; border-top:1px solid #e7e7e7;">
+                                <span t-field="o.payment_term_id"/>
+                            </td>
+                            <td style="padding:7px 10px; color:#666; border-top:1px solid #e7e7e7;">Pago estimado / Estimated Payment</td>
+                            <td style="padding:7px 10px; font-weight:600; border-top:1px solid #e7e7e7;">
+                                <span t-if="o.estimated_payment_date" t-field="o.estimated_payment_date"/>
+                                <span t-else="">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </xpath>
+
+        <xpath expr="//table[hasclass('o_main_table')]" position="attributes">
+            <attribute name="style" add="border:1px solid #d7d7d7; border-collapse:collapse;" separator=";"/>
+        </xpath>
+
+        <xpath expr="//table[hasclass('o_main_table')]/thead/tr" position="attributes">
+            <attribute name="style" add="background:#f1f1f1; border-bottom:2px solid #777;" separator=";"/>
+        </xpath>
+
+        <!-- Cabecera fecha entrega -->
+        <xpath expr="//th[@name='th_description']" position="after">
+            <th name="th_delivery_date" class="text-center" style="white-space:nowrap; vertical-align:middle;">
+                <strong>Fecha Entrega</strong><br/>
+                <span style="font-size:8px; font-weight:400; color:#666;">Delivery Date</span>
+            </th>
+        </xpath>
+
+        <!-- Fecha entrega por línea -->
+        <xpath expr="//td[@id='product']" position="after">
+            <td class="text-center" style="white-space:nowrap; vertical-align:middle;">
+                <span t-field="line.date_planned" t-options="{'widget':'date'}"/>
+            </td>
+        </xpath>
+    </template>
+</odoo>

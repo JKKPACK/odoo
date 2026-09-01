@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_stock_label_preview_wizard_form" model="ir.ui.view">
+        <field name="name">stock.label.preview.wizard.form</field>
+        <field name="model">stock.label.preview.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Etiquetas ZPL" create="0" edit="0" class="o_mrp_zpl_preview_form">
+                <sheet>
+                    <field name="move_line_id" invisible="1"/>
+                    <field name="move_line_ids" invisible="1"/>
+                    <field name="zpl_code" invisible="1"/>
+                    <div class="text-muted mb-2" invisible="label_count &lt;= 1">
+                        <span>Etiquetas: </span><field name="label_count" class="d-inline"/>
+                    </div>
+                    <field name="preview_line_ids" nolabel="1" readonly="1">
+                        <kanban class="o_mrp_zpl_preview_kanban o_mrp_zpl_preview_receipt" create="0" delete="0">
+                            <field name="name"/>
+                            <field name="preview_image"/>
+                            <templates>
+                                <t t-name="card">
+                                    <div class="o_mrp_zpl_preview_card p-2 text-center">
+                                        <h5 class="mb-2"><field name="name"/></h5>
+                                        <field name="preview_image" widget="image" class="img-fluid"/>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
+                    </field>
+                </sheet>
+                <footer>
+                    <button string="Zebra ZPL" name="action_print_physical_label" type="object" class="btn-primary" icon="fa-print"/>
+                    <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
