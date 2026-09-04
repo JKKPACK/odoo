@@ -183,6 +183,22 @@ class MrpProduction(models.Model):
         )
         return workcenters[:1]
 
+
+    def _report_comments(self):
+        """Return a safe comment value for QWeb reports.
+
+        QWeb's restricted evaluation context does not expose Python's ``getattr``.
+        Resolve optional fields here in Python so report templates stay compatible
+        with Odoo 19 regardless of which optional comment field is installed.
+        """
+        self.ensure_one()
+        for field_name in ("note", "description", "customer_label_text"):
+            if field_name in self._fields:
+                value = self[field_name]
+                if value:
+                    return value
+        return ""
+
     def action_start_packing(self):
         self.ensure_one()
         available_lots = self._available_packing_lots()

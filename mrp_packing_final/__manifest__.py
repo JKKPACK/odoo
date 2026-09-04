@@ -1,6 +1,6 @@
 {
     "name": "MRP Empaquetado Final - Armado de Tarimas",
-    "version": "19.0.1.9.5",
+    "version": "19.0.1.9.9",
     "summary": "Empaquetado post-manufactura: cajas/bobinas, tarimas, ZPL y packing list",
     "category": "Manufacturing",
     "author": "Oscar Morocho <oscar.morocho@gateway-resources.com>",
@@ -20,6 +20,7 @@
         "wizards/stock_label_preview_wizard_views.xml",
         "reports/report_mrp_components.xml",
         "reports/report_mrporder_inherit.xml",
+        "reports/stock_transfer_report.xml",
         "reports/purchase_order_report.xml",
         "reports/zebra_receipt_label_zpl.xml",
         "reports/packing_list_report.xml",

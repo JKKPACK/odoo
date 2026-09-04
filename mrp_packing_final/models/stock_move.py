@@ -1,5 +1,6 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools.float_utils import float_compare, float_round
 
 
 class StockMove(models.Model):
@@ -79,7 +80,20 @@ class StockMove(models.Model):
                 ).mapped("quantity")
             )
             total_received = previous_received + move.quantity
-            if total_received > ordered_qty:
+
+            # Compare using the product UoM precision. A direct float comparison
+            # can reject a valid receipt because values such as
+            # 2166.00 + 2078.86 may internally become 4244.860000000001.
+            rounding = purchase_line.product_uom.rounding or 0.01
+            if float_compare(
+                total_received,
+                ordered_qty,
+                precision_rounding=rounding,
+            ) > 0:
+                ordered_display = float_round(ordered_qty, precision_rounding=rounding)
+                previous_display = float_round(previous_received, precision_rounding=rounding)
+                current_display = float_round(move.quantity, precision_rounding=rounding)
+                total_display = float_round(total_received, precision_rounding=rounding)
                 raise ValidationError(
                     _(
                         "No puede recibir más cantidad de la comprada.\n\n"
@@ -91,10 +105,10 @@ class StockMove(models.Model):
                     )
                     % (
                         move.product_id.display_name,
-                        ordered_qty,
-                        previous_received,
-                        move.quantity,
-                        total_received,
+                        ordered_display,
+                        previous_display,
+                        current_display,
+                        total_display,
                     )
                 )
 
