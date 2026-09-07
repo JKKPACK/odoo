@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-  <template id="report_mrporder_jkk" inherit_id="mrp.report_mrporder">
+  <template id="report_mrporder_jkk" inherit_id="mrp.report_mrporder" priority="99">
     <xpath expr="//div[hasclass('page')]" position="replace">
       <div class="page" style="font-family:Arial, sans-serif; color:#222;">
         <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
           <tr>
             <td style="width:68%; vertical-align:middle;">
-              <div style="font-size:11px; text-transform:uppercase; color:#666;">Manufactura / Manufacturing</div>
-              <div style="font-size:24px; font-weight:700; margin-top:3px;">Orden de Fabricación</div>
+              <div style="font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">PROCESO: <span t-esc="o._packing_workcenter().name if o._packing_workcenter() else '-'"/></div>
+              <div style="font-size:11px; text-transform:uppercase; color:#666; margin-top:2px;">Manufactura / Manufacturing</div>
+              <div style="font-size:26px; font-weight:800; margin-top:3px;">ORDEN DE FABRICACIÓN</div>
               <div style="font-size:15px; font-weight:700; margin-top:3px;"><span t-field="o.name"/></div>
             </td>
             <td style="width:32%; text-align:right; vertical-align:middle;">
@@ -15,7 +16,23 @@
             </td>
           </tr>
         </table>
-        <div style="border-top:3px solid #333; margin-bottom:14px;"></div>
+        <div style="border-top:3px solid #333; margin-bottom:10px;"></div>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:14px; table-layout:fixed;">
+          <tr>
+            <td style="width:34%; padding:9px; border:1px solid #333;">
+              <div style="font-size:9px; font-weight:700; text-transform:uppercase;">Cantidad Planificada</div>
+              <div style="font-size:19px; font-weight:800; margin-top:3px;"><span t-field="o.product_qty"/> <span t-field="o.product_uom_id"/></div>
+            </td>
+            <td style="width:33%; padding:9px; border:1px solid #333;">
+              <div style="font-size:9px; font-weight:700; text-transform:uppercase;">Proceso</div>
+              <div style="font-size:16px; font-weight:800; margin-top:3px;" t-esc="o._packing_workcenter().name if o._packing_workcenter() else '-'"/>
+            </td>
+            <td style="width:33%; padding:9px; border:1px solid #333;">
+              <div style="font-size:9px; font-weight:700; text-transform:uppercase;">Diseño</div>
+              <div style="font-size:16px; font-weight:800; margin-top:3px;" t-esc="o.design_no or '-'"/>
+            </td>
+          </tr>
+        </table>
 
         <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:14px; font-size:10px;">
           <tr>
@@ -35,13 +52,17 @@
                 <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Estado</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.state"/></td></tr>
                 <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Cliente</td><td style="padding:6px; border-bottom:1px solid #ddd;"><span t-field="o.customer_name"/></td></tr>
                 <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Lista Materiales</td><td style="padding:6px; border-bottom:1px solid #ddd; overflow-wrap:anywhere;"><span t-field="o.bom_reference"/></td></tr>
-                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Cantidad</td><td style="padding:6px; border-bottom:1px solid #ddd; font-weight:700;"><span t-field="o.product_qty"/> <span t-field="o.product_uom_id"/></td></tr>
+                <tr><td style="padding:6px; background:#f2f2f2; font-weight:700;">Cantidad Planificada</td><td style="padding:6px; border-bottom:1px solid #ddd; font-weight:700;"><span t-field="o.product_qty"/> <span t-field="o.product_uom_id"/></td></tr>
               </table>
             </td>
           </tr>
         </table>
         <div style="font-size:14px; font-weight:700; margin:14px 0 7px; padding-bottom:5px; border-bottom:2px solid #333;">Componentes / Components</div>
         <t t-call="mrp.report_mrp_production_components"/>
+        <div style="margin-top:16px; border:1px solid #999; min-height:58px; padding:8px;">
+          <div style="font-size:10px; font-weight:800; margin-bottom:4px;">Comentarios</div>
+          <span t-esc="o._report_comments()"/>
+        </div>
       </div>
     </xpath>
   </template>
