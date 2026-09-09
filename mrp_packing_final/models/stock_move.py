@@ -84,7 +84,7 @@ class StockMove(models.Model):
             # Compare using the product UoM precision. A direct float comparison
             # can reject a valid receipt because values such as
             # 2166.00 + 2078.86 may internally become 4244.860000000001.
-            rounding = purchase_line.product_uom.rounding or 0.01
+            rounding = purchase_line.product_uom_id.rounding or 0.01
             if float_compare(
                 total_received,
                 ordered_qty,
